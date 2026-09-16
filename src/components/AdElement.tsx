@@ -30,6 +30,9 @@ const AdElement: React.FC<Props> = ({ el }) => {
   switch (el.type) {
     case "image":
       if (!el.content) return null;
+      const focalPos = el.focalPoint
+        ? `${Math.round(el.focalPoint.x * 100)}% ${Math.round(el.focalPoint.y * 100)}%`
+        : "center";
       return (
         <div style={base}>
           <img
@@ -39,7 +42,7 @@ const AdElement: React.FC<Props> = ({ el }) => {
               width: "100%",
               height: "100%",
               objectFit: el.imageFit ?? "cover",
-              objectPosition: "center",
+              objectPosition: focalPos,
               display: "block",
             }}
             loading="lazy"

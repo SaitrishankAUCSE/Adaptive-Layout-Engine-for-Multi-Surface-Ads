@@ -10,10 +10,53 @@ export interface CampaignPreset {
 
 export const CAMPAIGN_PRESETS: CampaignPreset[] = [
   {
-    id: "luxury-watch",
-    name: "Luxury Timepieces",
-    category: "E-Commerce",
+    id: "wireless-headphones",
+    name: "Wireless Headphones",
+    category: "Audio",
     elements: SAMPLE_AD,
+  },
+  {
+    id: "spec-long-headline",
+    name: "Long Headline Test",
+    category: "Spec Benchmark",
+    elements: [
+      {
+        id: "image",
+        type: "image",
+        content: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&q=80",
+        priority: 1,
+        aspectRatio: 1.2,
+        flexible: true,
+        focalPoint: { x: 0.5, y: 0.5 },
+      },
+      {
+        id: "logo",
+        type: "logo",
+        content: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&q=80",
+        priority: 1,
+        aspectRatio: 3.0,
+      },
+      {
+        id: "headline",
+        type: "headline",
+        content: "Discover the New Generation of Premium Wireless Headphones Designed for Immersive Everyday Listening",
+        priority: 1,
+        flexible: true,
+      },
+      {
+        id: "subtext",
+        type: "subtext",
+        content: "Immersive sound designed for everyday listening.",
+        priority: 3,
+        flexible: true,
+      },
+      {
+        id: "cta",
+        type: "cta",
+        content: "Shop Now",
+        priority: 1,
+      },
+    ],
   },
   {
     id: "flash-sale",
@@ -30,9 +73,9 @@ export const CAMPAIGN_PRESETS: CampaignPreset[] = [
       {
         id: "logo",
         type: "logo",
-        content: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=200&q=80",
+        content: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&q=80",
         priority: 3,
-        aspectRatio: 3.2,
+        aspectRatio: 3.0,
       },
       {
         id: "headline",

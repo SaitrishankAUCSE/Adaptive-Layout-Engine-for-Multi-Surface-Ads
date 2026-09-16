@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { AdElement } from "./engine/types";
+import type { AdElement, Surface } from "./engine/types";
 import { SAMPLE_AD } from "./data/sampleAd";
 import { SURFACES } from "./data/surfaces";
 import { LivePreviewGrid } from "./components/LivePreviewGrid";
@@ -48,11 +48,14 @@ const AnysizeLogo = ({ size = 14 }: { size?: number }) => (
   </svg>
 );
 
+import { CustomSurface } from "./components/CustomSurface";
+
 const App: React.FC = () => {
   const [view, setView] = useState<View>("editor");
   const [panelOpen, setPanelOpen] = useState(true);
   const [filter, setFilter] = useState<FilterShape>("ALL");
   const [elements, setElements] = useState<AdElement[]>(SAMPLE_AD);
+  const [surfacesList, setSurfacesList] = useState<Surface[]>(SURFACES);
   const [activeSurfaces, setActiveSurfaces] = useState<string[]>(
     SURFACES.map((s) => s.id)
   );
@@ -63,7 +66,12 @@ const App: React.FC = () => {
     setShowLanding(false);
   };
 
-  const visibleSurfaces = SURFACES.filter((s) => activeSurfaces.includes(s.id));
+  const handleAddCustomSurface = (newSurface: Surface) => {
+    setSurfacesList((prev) => [newSurface, ...prev]);
+    setActiveSurfaces((prev) => [newSurface.id, ...prev]);
+  };
+
+  const visibleSurfaces = surfacesList.filter((s) => activeSurfaces.includes(s.id));
   const filteredSurfaces =
     filter === "ALL"
       ? visibleSurfaces
@@ -188,7 +196,7 @@ const App: React.FC = () => {
               </p>
             </div>
             <SurfaceTogglePanel
-              surfaces={SURFACES}
+              surfaces={surfacesList}
               activeIds={activeSurfaces}
               onChange={setActiveSurfaces}
             />
@@ -207,13 +215,16 @@ const App: React.FC = () => {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="pb-20"
               >
-                <div className="mb-6">
-                  <h1 className="text-xl font-semibold tracking-[-0.04em] bg-gradient-to-r from-[#f0f1c7] via-[#d0e5d8] via-[46%] to-[#ffffff] bg-clip-text text-transparent">
-                    Live Preview Canvas
-                  </h1>
-                  <p className="text-muted-foreground text-xs mt-0.5">
-                    Adapting to {filteredSurfaces.length} formats dynamically
-                  </p>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h1 className="text-xl font-semibold tracking-[-0.04em] bg-gradient-to-r from-[#f0f1c7] via-[#d0e5d8] via-[46%] to-[#ffffff] bg-clip-text text-transparent">
+                      Live Preview Canvas
+                    </h1>
+                    <p className="text-muted-foreground text-xs mt-0.5">
+                      Adapting to {filteredSurfaces.length} formats dynamically
+                    </p>
+                  </div>
+                  <CustomSurface onAdd={handleAddCustomSurface} />
                 </div>
                 <LivePreviewGrid elements={elements} surfaces={filteredSurfaces} />
               </motion.div>

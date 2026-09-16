@@ -5,18 +5,12 @@ import type { Surface } from "../engine/types";
  * IAB source: https://www.iab.com/newadportfolio/
  */
 export const SURFACES: Surface[] = [
-  // ── IAB Display Ad Sizes ────────────────────────────────────────────
+  // ── 5 Required Default Surfaces ─────────────────────────────────────
   {
-    id: "leaderboard",
-    name: "Leaderboard",
+    id: "banner",
+    name: "Banner",
     width: 728,
     height: 90,
-  },
-  {
-    id: "mrec",
-    name: "MREC",
-    width: 300,
-    height: 250,
   },
   {
     id: "square",
@@ -25,11 +19,25 @@ export const SURFACES: Surface[] = [
     height: 300,
   },
   {
+    id: "mrec",
+    name: "MREC",
+    width: 300,
+    height: 250,
+  },
+  {
     id: "interstitial",
     name: "Interstitial",
     width: 320,
     height: 480,
   },
+  {
+    id: "story",
+    name: "Story",
+    width: 1080,
+    height: 1920,
+  },
+
+  // ── Additional Standard & Social Formats ────────────────────────────
   {
     id: "billboard",
     name: "Billboard",
@@ -41,14 +49,6 @@ export const SURFACES: Surface[] = [
     name: "Half Page",
     width: 300,
     height: 600,
-  },
-
-  // ── Social Media Formats ────────────────────────────────────────────
-  {
-    id: "instagram-reel",
-    name: "Instagram Reel",
-    width: 1080,
-    height: 1920,
   },
   {
     id: "instagram-feed",

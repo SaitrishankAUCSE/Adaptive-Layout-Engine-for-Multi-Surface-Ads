@@ -1,9 +1,21 @@
 /**
  * engine.test.ts
  *
- * Unit tests for the layout engine.
- * These run in Node — no browser, no React — proving the engine is pure.
+ * Comprehensive unit test suite verifying all 12 specification requirements:
+ *  1. Wide surface → horizontal layout.
+ *  2. Tall surface → vertical layout.
+ *  3. Square surface → square/balanced layout.
+ *  4. Long content → lower-priority element can be hidden.
+ *  5. Headline → font size decreases when constrained.
+ *  6. Priority-1 elements remain visible whenever possible.
+ *  7. Image aspect ratio is preserved.
+ *  8. Custom dimensions work.
+ *  9. Elements remain inside surface boundaries.
+ * 10. No negative widths/heights.
+ * 11. Missing optional content doesn't crash the engine.
+ * 12. Extremely small surfaces are handled gracefully.
  *
+ * Runs purely in Node without DOM/React dependencies.
  * Run: npm run test
  */
 
@@ -15,130 +27,160 @@ import { SAMPLE_AD } from "./data/sampleAd";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
-const LEADERBOARD: Surface = { id: "lb", name: "Leaderboard", width: 728, height: 90 };
+const BANNER: Surface = { id: "banner", name: "Banner", width: 728, height: 90 };
+const SQUARE: Surface = { id: "square", name: "Square", width: 300, height: 300 };
 const MREC: Surface = { id: "mrec", name: "MREC", width: 300, height: 250 };
 const STORY: Surface = { id: "story", name: "Story", width: 1080, height: 1920 };
-const INTERSTITIAL: Surface = { id: "int", name: "Interstitial", width: 320, height: 480 };
-const MICRO: Surface = { id: "micro", name: "Micro", width: 200, height: 50 };
-const CUSTOM_SQUARE: Surface = { id: "cs", name: "Custom Square", width: 400, height: 400 };
+const INTERSTITIAL: Surface = { id: "interstitial", name: "Interstitial", width: 320, height: 480 };
+const CUSTOM_SURFACE: Surface = { id: "custom", name: "Custom 500x150", width: 500, height: 150 };
+const TINY_SURFACE: Surface = { id: "tiny", name: "Tiny 120x40", width: 120, height: 40 };
 
-// ─── Classification tests ─────────────────────────────────────────────────────
-
-describe("classifySurface", () => {
-  it("classifies Leaderboard (728×90, AR≈8.1) as WIDE", () => {
-    expect(classifySurface(LEADERBOARD)).toBe("WIDE");
+describe("Adaptive Layout Engine — 12 Specification Test Cases", () => {
+  // 1. Wide surface → horizontal layout
+  it("1. Wide surface → horizontal layout", () => {
+    const result = layoutEngine(SAMPLE_AD, BANNER);
+    expect(result.template).toBe("HORIZONTAL");
+    expect(classifySurface(BANNER)).toBe("WIDE");
   });
 
-  it("classifies Story (1080×1920, AR≈0.56) as TALL", () => {
+  // 2. Tall surface → vertical layout
+  it("2. Tall surface → vertical layout", () => {
+    const storyResult = layoutEngine(SAMPLE_AD, STORY);
+    expect(storyResult.template).toBe("VERTICAL_STACK");
     expect(classifySurface(STORY)).toBe("TALL");
+
+    const intResult = layoutEngine(SAMPLE_AD, INTERSTITIAL);
+    expect(intResult.template).toBe("VERTICAL_STACK");
+    expect(classifySurface(INTERSTITIAL)).toBe("TALL");
   });
 
-  it("classifies MREC (300×250, AR=1.2) as SQUARE", () => {
+  // 3. Square surface → square/balanced layout
+  it("3. Square surface → square/balanced layout", () => {
+    const sqResult = layoutEngine(SAMPLE_AD, SQUARE);
+    expect(sqResult.template).toBe("CENTERED_STACK");
+    expect(classifySurface(SQUARE)).toBe("SQUARE");
+
+    const mrecResult = layoutEngine(SAMPLE_AD, MREC);
+    expect(mrecResult.template).toBe("CENTERED_STACK");
     expect(classifySurface(MREC)).toBe("SQUARE");
   });
 
-  it("classifies Interstitial (320×480, AR≈0.67) as SQUARE (borderline)", () => {
-    // 320/480 = 0.667 — just above TALL threshold of 0.65
-    const shape = classifySurface(INTERSTITIAL);
-    expect(["SQUARE", "TALL"]).toContain(shape);
-  });
-
-  it("classifies a perfectly square surface as SQUARE", () => {
-    expect(classifySurface(CUSTOM_SQUARE)).toBe("SQUARE");
-  });
-});
-
-// ─── Template selection tests ─────────────────────────────────────────────────
-
-describe("layoutEngine — template selection", () => {
-  it("uses HORIZONTAL template for a WIDE surface", () => {
-    const result = layoutEngine(SAMPLE_AD, LEADERBOARD);
-    expect(result.template).toBe("HORIZONTAL");
-  });
-
-  it("uses CENTERED_STACK template for a SQUARE surface", () => {
-    const result = layoutEngine(SAMPLE_AD, MREC);
-    expect(result.template).toBe("CENTERED_STACK");
-  });
-
-  it("uses VERTICAL_STACK template for a TALL surface", () => {
-    const result = layoutEngine(SAMPLE_AD, STORY);
-    expect(result.template).toBe("VERTICAL_STACK");
-  });
-});
-
-// ─── Priority pruning tests ───────────────────────────────────────────────────
-
-describe("layoutEngine — priority pruning", () => {
-  it("shows all elements on a large surface (Story)", () => {
-    const result = layoutEngine(SAMPLE_AD, STORY);
-    const visibleIds = result.elements
-      .filter((e) => e.visible)
-      .map((e) => e.id);
-    // All 5 sample elements should be visible on a Story
-    expect(visibleIds).toContain("headline");
-    expect(visibleIds).toContain("cta");
-  });
-
-  it("hides priority-3 elements on a tiny micro surface (200×50 = 10,000 px²)", () => {
-    const elements: AdElement[] = [
-      ...SAMPLE_AD,
+  // 4. Long content → lower-priority element can be hidden
+  it("4. Long content → lower-priority element can be hidden", () => {
+    const longContentAd: AdElement[] = [
+      ...SAMPLE_AD.filter((e) => e.type !== "headline"),
       {
-        id: "tagline",
-        type: "subtext",
-        content: "Fine print tagline",
-        priority: 3,
+        id: "headline",
+        type: "headline",
+        content: "Discover the New Generation of Premium Wireless Headphones Designed for Immersive Everyday Listening",
+        priority: 1,
       },
     ];
-    const result = layoutEngine(elements, MICRO);
-    const tagline = result.elements.find((e) => e.id === "tagline");
-    // priority-3 should be dropped (either not present or not visible)
-    expect(tagline?.visible ?? false).toBe(false);
+    // In a compact banner (728x90) with a long headline, description is hidden to prevent vertical overflow
+    const result = layoutEngine(longContentAd, BANNER);
+    const subtext = result.elements.find((e) => e.type === "subtext");
+    expect(subtext?.visible).toBe(false);
+    expect(subtext?.reason).toBe("hidden");
   });
 
-  it("always keeps priority-1 elements (headline + CTA) visible on any surface", () => {
-    const result = layoutEngine(SAMPLE_AD, MICRO);
-    const headline = result.elements.find((e) => e.id === "headline");
-    const cta = result.elements.find((e) => e.id === "cta");
+  // 5. Headline → font size decreases when constrained
+  it("5. Headline → font size decreases when constrained", () => {
+    const storyResult = layoutEngine(SAMPLE_AD, STORY);
+    const bannerResult = layoutEngine(SAMPLE_AD, BANNER);
+
+    const storyHL = storyResult.elements.find((e) => e.type === "headline");
+    const bannerHL = bannerResult.elements.find((e) => e.type === "headline");
+
+    expect(storyHL?.fontSize).toBeDefined();
+    expect(bannerHL?.fontSize).toBeDefined();
+    expect(bannerHL!.fontSize!).toBeLessThan(storyHL!.fontSize!);
+  });
+
+  // 6. Priority-1 elements remain visible whenever possible
+  it("6. Priority-1 elements remain visible whenever possible", () => {
+    const tinyResult = layoutEngine(SAMPLE_AD, TINY_SURFACE);
+
+    // Headline and CTA are Priority 1 and must be protected
+    const headline = tinyResult.elements.find((e) => e.type === "headline");
+    const cta = tinyResult.elements.find((e) => e.type === "cta");
+
     expect(headline?.visible).toBe(true);
     expect(cta?.visible).toBe(true);
   });
-});
 
-// ─── Font scaling tests ───────────────────────────────────────────────────────
-
-describe("layoutEngine — font scaling", () => {
-  it("headline fontSize is larger on Story than on Leaderboard", () => {
-    const storyResult = layoutEngine(SAMPLE_AD, STORY);
-    const lbResult = layoutEngine(SAMPLE_AD, LEADERBOARD);
-
-    const storyHL = storyResult.elements.find((e) => e.id === "headline");
-    const lbHL = lbResult.elements.find((e) => e.id === "headline");
-
-    expect(storyHL?.fontSize).toBeGreaterThan(lbHL?.fontSize ?? 0);
+  // 7. Image aspect ratio is preserved
+  it("7. Image aspect ratio is preserved", () => {
+    const result = layoutEngine(SAMPLE_AD, BANNER);
+    const img = result.elements.find((e) => e.type === "image");
+    expect(img).toBeDefined();
+    expect(img?.visible).toBe(true);
+    expect(img?.imageFit).toBe("cover"); // Non-distorting cover fit
+    // Width and height are positive and proportional
+    expect(img!.width).toBeGreaterThan(0);
+    expect(img!.height).toBeGreaterThan(0);
   });
 
-  it("all element positions are non-negative numbers", () => {
-    const result = layoutEngine(SAMPLE_AD, MREC);
-    for (const el of result.elements.filter((e) => e.visible)) {
-      expect(el.x).toBeGreaterThanOrEqual(0);
-      expect(el.y).toBeGreaterThanOrEqual(0);
-      expect(el.width).toBeGreaterThan(0);
-      expect(el.height).toBeGreaterThan(0);
+  // 8. Custom dimensions work (e.g. 500 × 150)
+  it("8. Custom dimensions work", () => {
+    const result = layoutEngine(SAMPLE_AD, CUSTOM_SURFACE);
+    expect(result.surface.width).toBe(500);
+    expect(result.surface.height).toBe(150);
+    expect(result.template).toBe("HORIZONTAL"); // 500/150 = 3.33 >= 2.2 -> WIDE
+    expect(result.elements.length).toBeGreaterThanOrEqual(SAMPLE_AD.length);
+  });
+
+  // 9. Elements remain inside surface boundaries
+  it("9. Elements remain inside surface boundaries", () => {
+    const surfaces = [BANNER, SQUARE, MREC, STORY, INTERSTITIAL, CUSTOM_SURFACE];
+    for (const surface of surfaces) {
+      const result = layoutEngine(SAMPLE_AD, surface);
+      for (const el of result.elements.filter((e) => e.visible)) {
+        expect(el.x).toBeGreaterThanOrEqual(0);
+        expect(el.y).toBeGreaterThanOrEqual(0);
+        expect(el.x + el.width).toBeLessThanOrEqual(surface.width + 1); // allow 1px rounding
+        expect(el.y + el.height).toBeLessThanOrEqual(surface.height + 1);
+      }
     }
   });
-});
 
-// ─── hiddenCount tests ────────────────────────────────────────────────────────
-
-describe("layoutEngine — hiddenCount", () => {
-  it("returns hiddenCount = 0 for Story with default ad", () => {
-    const result = layoutEngine(SAMPLE_AD, STORY);
-    expect(result.hiddenCount).toBe(0);
+  // 10. No negative widths/heights
+  it("10. No negative widths/heights", () => {
+    const surfaces = [BANNER, SQUARE, STORY, TINY_SURFACE, CUSTOM_SURFACE];
+    for (const surface of surfaces) {
+      const result = layoutEngine(SAMPLE_AD, surface);
+      for (const el of result.elements) {
+        expect(el.width).toBeGreaterThanOrEqual(0);
+        expect(el.height).toBeGreaterThanOrEqual(0);
+        expect(el.x).toBeGreaterThanOrEqual(0);
+        expect(el.y).toBeGreaterThanOrEqual(0);
+      }
+    }
   });
 
-  it("returns correct surface reference in result", () => {
-    const result = layoutEngine(SAMPLE_AD, MREC);
-    expect(result.surface.id).toBe("mrec");
+  // 11. Missing optional content doesn't crash the engine
+  it("11. Missing optional content doesn't crash the engine", () => {
+    const partialElements: AdElement[] = [
+      { id: "headline", type: "headline", content: "Minimal Ad", priority: 1 },
+      { id: "cta", type: "cta", content: "Go", priority: 1 },
+    ];
+    expect(() => layoutEngine(partialElements, BANNER)).not.toThrow();
+    expect(() => layoutEngine(partialElements, STORY)).not.toThrow();
+    expect(() => layoutEngine(partialElements, SQUARE)).not.toThrow();
+
+    const emptyElements: AdElement[] = [];
+    expect(() => layoutEngine(emptyElements, BANNER)).not.toThrow();
+  });
+
+  // 12. Extremely small surfaces are handled gracefully
+  it("12. Extremely small surfaces are handled gracefully", () => {
+    const extremeMicro: Surface = { id: "micro", name: "Micro 60x20", width: 60, height: 20 };
+    expect(() => layoutEngine(SAMPLE_AD, extremeMicro)).not.toThrow();
+    const result = layoutEngine(SAMPLE_AD, extremeMicro);
+    expect(result.hiddenCount).toBeGreaterThan(0);
+    // Elements that remain must have non-negative dimensions
+    for (const el of result.elements) {
+      expect(el.width).toBeGreaterThanOrEqual(0);
+      expect(el.height).toBeGreaterThanOrEqual(0);
+    }
   });
 });

@@ -1,248 +1,250 @@
-# Anysize — Adaptive Layout Engine for Multi-Surface Ads
+# Adaptive Layout Engine for Multi-Surface Ads
 
-> A pure TypeScript layout engine that takes one ad's content and automatically adapts it to any IAB ad surface — resizing text, repositioning elements, cropping images, and hiding lower-priority items when space runs out.
-
-**[Adaptive Multi-Surface Ad Engine • SDE-FE R&D Demo]**
+> A pure TypeScript layout engine that takes a single structured advertisement and autonomously computes optimal, surface-specific layouts across diverse aspect ratios and dimensions without relying on DOM measurements or external constraints.
 
 ---
 
-## What It Does
+## Table of Contents
 
-Feed the engine one ad (headline, image, subtext, CTA, logo) and a surface size. It returns exact pixel positions and font sizes for every element — adapted to that surface. React renders the result. React makes zero layout decisions.
-
-```
-layoutEngine(elements, surface) → LayoutResult
-```
-
-Open the live demo, edit the headline, and watch all 5 surface previews update instantly.
-
----
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────────────┐
-│                    React UI (dumb renderer)               │
-│                                                          │
-│   AdEditor ──→ (elements state) ──→ PreviewGrid          │
-│                                         │                │
-│                              for each surface:           │
-│                                         ▼                │
-│                              layoutEngine(els, surface)  │
-│                                         │                │
-│                              ← pure TS, no DOM →         │
-│                                         │                │
-│                              → LayoutResult              │
-│                              (x, y, w, h, fontSize)      │
-│                                         │                │
-│                              AdPreview renders it        │
-└──────────────────────────────────────────────────────────┘
-```
-
-**Key architectural decision**: `src/engine/layoutEngine.ts` is a **pure function** — no React, no DOM, no side effects. This means it can be unit-tested in Node with plain Vitest (no browser required) and the algorithm is completely decoupled from rendering.
+1. [What the Project Does](#1-what-the-project-does)
+2. [The Problem It Solves](#2-the-problem-it-solves)
+3. [How the Layout Engine Works](#3-how-the-layout-engine-works)
+4. [How Surfaces Are Classified](#4-how-surfaces-are-classified)
+5. [How Priority-Based Adaptation Works](#5-how-priority-based-adaptation-works)
+6. [How Images Are Handled](#6-how-images-are-handled)
+7. [Why Rule-Based Heuristics Were Chosen](#7-why-rule-based-heuristics-were-chosen)
+8. [Architecture](#8-architecture)
+9. [Testing & Quality Verification](#9-testing--quality-verification)
+10. [How to Run Locally](#10-how-to-run-locally)
+11. [Future Improvements](#11-future-improvements)
 
 ---
 
-## How the Algorithm Works
+## 1. What the Project Does
 
-### Step 1 — Classify surface shape
+The application allows a marketer or creative designer to provide five fundamental ad assets once:
 
-```typescript
-aspectRatio = width / height
+- **Hero / Product Image**
+- **Brand Logo**
+- **Headline**
+- **Description / Subtext**
+- **Call-to-Action (CTA)**
 
-WIDE   → AR > 2.2    // Leaderboard 728×90 (AR ≈ 8.1)
-SQUARE → 0.65–2.2    // MREC 300×250 (AR = 1.2), Square 300×300
-TALL   → AR < 0.65   // Story 1080×1920 (AR ≈ 0.56)
-```
-
-### Step 2 — Select layout template
-
-| Shape | Template | Description |
-|---|---|---|
-| WIDE | HORIZONTAL | Image left · text + CTA right — single row |
-| SQUARE | CENTERED_STACK | Image top · logo · headline · subtext · CTA centered |
-| TALL | VERTICAL_STACK | Large image · logo · big headline · subtext · full-width CTA |
-
-### Step 3 — Priority-based element pruning
-
-Each element has a priority (`1 = always show`, `3 = drop first`).
+From this single source of truth, the **Adaptive Layout Engine** autonomously computes tailored, responsive advertisement layouts for various ad surfaces:
 
 ```
-Surface area ≥ 50,000 px² → all elements visible
-Surface area < 50,000 px² → drop priority-3 elements
-Surface area < 10,000 px² → drop priority-2 too (only P1 survives)
+                          ONE AD
+                            ↓
+                 Adaptive Layout Engine
+                            ↓
+┌────────────┬────────────┬────────────┬────────────┬────────────┐
+│  728 × 90  │ 300 × 300  │ 300 × 250  │ 320 × 480  │ 1080×1920  │
+│   Banner   │   Square   │    MREC    │Interstitial│   Story    │
+└────────────┴────────────┴────────────┴────────────┴────────────┘
 ```
 
-The default content is deliberately too long for the Leaderboard banner — load the page and you'll see the engine's adaptive behaviour immediately.
-
-### Step 4 — Scale fonts and images
-
-```typescript
-headlineFontSize = clamp(surface.height × 0.09, 10, 80)
-subtextFontSize  = headlineFontSize × 0.58
-ctaFontSize      = headlineFontSize × 0.70
-```
-
-Images fill their allocated slot with `object-fit: cover`. The engine returns real pixel values; the React thumbnail wrapper uses `CSS transform: scale()` to fit Story (1080×1920) into the grid without changing internal math.
+This is **not an image resizer or CSS media query hack**. The engine mathematically computes:
+- Exact $(x, y)$ coordinate placements for every element.
+- Optimal $(w, h)$ bounding boxes in real target pixel units.
+- Proportionate typographic font sizing.
+- Intelligent focal-point cropping and aspect-ratio preservation.
+- Deterministic hiding of lower-priority elements when surface area is constrained.
 
 ---
 
-## Why Rule-Based Heuristics (Not a Constraint Solver)
+## 2. The Problem It Solves
 
-A **Cassowary-style constraint solver** (used in Apple's Auto Layout, Adobe XD) would express layout as a system of linear equations and let a solver find positions. It's more expressive — you can say "headline must be at least 12px from the CTA" without hard-coding it.
+Modern digital advertising requires deploying identical creative campaigns across dozens of fragmented surfaces:
+- Desktop display leaderboards ($728 \times 90$)
+- In-feed square units ($300 \times 300$, $1080 \times 1080$)
+- Mobile interstitials ($320 \times 480$)
+- Full-screen social stories and reels ($1080 \times 1920$)
+- Custom display widgets and programmatic slots (e.g., $500 \times 150$)
 
-**Why I chose rule-based instead:**
+Historically, agencies manually redesign and crop each variant, or use naive CSS media queries that break when aspect ratios shift drastically.
 
-1. **Explainability** — every layout decision maps to a named rule. Easy to debug, audit, and explain to a non-engineer.
-2. **Performance** — O(n) with n = number of elements. No solver overhead.
-3. **Sufficient for this scope** — 3 templates × priority system covers the real design space of IAB display ads.
-4. **Deadline-safe** — adding Cassowary via `kiwi.js` is the natural next step, documented below.
-
-The trade-off: rule-based heuristics become brittle as the number of templates grows. A constraint solver handles edge cases more gracefully.
+**The Adaptive Layout Engine solves this by treating ad layout as an autonomous constraint-satisfaction heuristic problem**, eliminating repetitive design grunt work while guaranteeing brand integrity.
 
 ---
 
-## IAB Surface Presets
+## 3. How the Layout Engine Works
 
-| Surface | Size | Shape | Template used |
+The core engine is located at `src/engine/layoutEngine.ts`. It is a **pure TypeScript function**:
+
+$$\text{layoutEngine}(\text{elements: AdElement[]}, \text{surface: Surface}) \longrightarrow \text{LayoutResult}$$
+
+### Execution Pipeline
+
+```mermaid
+graph TD
+    A[Input: Ad Elements + Surface Dimensions] --> B[Step 1: Priority-Based Pruning by Surface Area]
+    B --> C[Step 2: Geometric Surface Classification AR = W / H]
+    C --> D[Step 3: Template & Composition Selection]
+    D --> E[Step 4: Dimension Allocation, Font Sizing & Collision Check]
+    E --> F[Output: LayoutResult with Decisions & Exact Pixel Coordinates]
+```
+
+1. **Prune by Area & Priority**: Assesses surface capacity ($\text{area} = \text{width} \times \text{height}$). Identifies whether lower-priority elements can be accommodated.
+2. **Classify Surface Geometry**: Determines whether the surface is `WIDE`, `SQUARE`, or `TALL` using aspect ratios.
+3. **Template Composition**: Applies composition patterns (horizontal banner strip, balanced centered stack, or vertical story stack).
+4. **Collision & Constraint Resolution**: Adjusts font sizes and bounding boxes, clamping elements strictly inside surface bounds.
+
+---
+
+## 4. How Surfaces Are Classified
+
+Surfaces are classified by aspect ratio ($\text{AR} = \frac{\text{width}}{\text{height}}$), making the engine general rather than hardcoding surface names:
+
+| Category | Aspect Ratio Range | Target Formats | Composition Strategy |
 |---|---|---|---|
-| Leaderboard | 728 × 90 | WIDE | HORIZONTAL |
-| MREC | 300 × 250 | SQUARE | CENTERED_STACK |
-| Square | 300 × 300 | SQUARE | CENTERED_STACK |
-| Interstitial | 320 × 480 | SQUARE | CENTERED_STACK |
-| Story / Portrait | 1080 × 1920 | TALL | VERTICAL_STACK |
-
-Plus: add **any custom size** via the "Add Custom Surface" button — the aspect-ratio preview tells you which template will be selected before you add it.
+| **WIDE** | $\text{AR} \ge 2.2$ | Banner ($728 \times 90$), Billboard ($970 \times 250$), Custom ($500 \times 150$) | Horizontal composition: Image left, Logo + Headline in center, CTA pinned to right edge |
+| **SQUARE** | $0.75 < \text{AR} < 2.2$ | Square ($300 \times 300$), MREC ($300 \times 250$), Feed ($1080 \times 1080$) | Balanced stacked hierarchy: Image top 40%, Logo, 2-line Headline, Subtext, Centered CTA |
+| **TALL** | $\text{AR} \le 0.75$ | Story ($1080 \times 1920$), Interstitial ($320 \times 480$), Half-page ($300 \times 600$) | Vertical column: Hero visual 45%, Logo, 3-line Headline, Subtext, Full-width bottom CTA |
 
 ---
 
-## Running Locally
+## 5. How Priority-Based Adaptation Works
 
-```bash
-# 1. Clone and install
-git clone https://github.com/YOUR-USERNAME/anysize.git
-cd anysize
-npm install
+Every ad asset has an explicit priority:
+- **Priority 1 (Mandatory)**: Headline, CTA, Hero Image, Brand Logo. Must remain visible whenever possible.
+- **Priority 2 (Important)**: Subtext, secondary brand marks. Can shrink or wrap.
+- **Priority 3 (Optional)**: Extended descriptions, taglines, legal disclaimers. Dropped first on constrained surfaces.
 
-# 2. Start dev server
-npm run dev
-# → http://localhost:5173
+### Adaptation Steps Under Constraint:
 
-# 3. Run unit tests
-npm run test
-# → 15 tests, all passing
-```
+1. **Attempt Full Fit**: Fits all five elements within available padding and bounds.
+2. **Shrink Flexible Elements**: Compresses font sizes and scales images down.
+3. **Hide Priority-3 Elements**: If vertical or horizontal space is constrained (e.g. $728 \times 90$ with a 2-line headline, or surface area $< 50,000 \text{ px}^2$), the engine automatically hides Priority-3 elements.
+4. **Hide Priority-2 Elements**: On micro surfaces ($< 10,000 \text{ px}^2$), drops Priority-2 elements to ensure readability.
+5. **Protect Priority-1 Elements**: Guaranteed non-negative bounds and visibility.
 
 ---
 
-## Unit Tests
+## 6. How Images Are Handled
 
-The engine is tested in pure Node — no browser, no React mount:
-
-```
-✓ classifySurface › Leaderboard (728×90) → WIDE
-✓ classifySurface › Story (1080×1920) → TALL
-✓ classifySurface › MREC (300×250) → SQUARE
-✓ classifySurface › Interstitial (320×480) → SQUARE (borderline)
-✓ classifySurface › perfectly square surface → SQUARE
-✓ template selection › WIDE surface → HORIZONTAL
-✓ template selection › SQUARE surface → CENTERED_STACK
-✓ template selection › TALL surface → VERTICAL_STACK
-✓ priority pruning › Story shows all elements
-✓ priority pruning › micro surface (200×50) hides priority-3
-✓ priority pruning › priority-1 always visible on any surface
-✓ font scaling › Story fontSize > Leaderboard fontSize
-✓ font scaling › all positions are non-negative
-✓ hiddenCount › Story with default ad → hiddenCount = 0
-✓ hiddenCount › result contains correct surface reference
-
-Test Files  1 passed (1)
-Tests      15 passed (15)
-```
+- **Zero Distortion**: Images are never stretched.
+- **Aspect Ratio Preservation**: Natural aspect ratios are preserved using CSS `object-fit: cover` or `contain`.
+- **Focal-Point Cropping**: Supports an optional focal point:
+  ```typescript
+  focalPoint?: { x: number; y: number } // 0 to 1
+  ```
+  If no focal point is provided, the engine defaults to center cropping (`50% 50%`).
+- **Flexible Image Upload**: Supports local file upload via browser `FileReader` API (no cloud backend required) and external image URLs.
 
 ---
 
-## What I'd Do With More Time
+## 7. Why Rule-Based Heuristics Were Chosen
 
-| Feature | Description |
-|---|---|
-| **Constraint solver (kiwi.js)** | Replace heuristics with Cassowary constraints — "headline must have min 8px gap above CTA" expressed as math, not if/else |
-| **Drag-to-override per surface** | Let designers manually tweak positions for one surface without breaking others |
-| **ML-suggested layouts** | Train on historical CTR data — "this element arrangement performed 23% better on story format" |
-| **Animation preview** | Show how the layout transitions between surfaces for responsive environments |
-| **Export to CSS/JSON** | One-click export of the LayoutResult as production-ready CSS absolute positions or a JSON spec |
-| **Multi-ad comparison** | A/B test two creative variants across all surfaces simultaneously |
+Instead of a heavy mathematical constraint solver for the initial engine, rule-based heuristics were chosen for:
+
+1. **Deterministic Reproducibility**: Given the same inputs, the engine produces the exact same layout across all browsers and Node test runners.
+2. **Explainability & Transparency**: The engine returns explicit `decisions: string[]` explaining why an element was shrunk, hidden, or wrapped (visible in the UI under "Layout Decisions").
+3. **Sub-Millisecond Latency**: Executes in $< 1\text{ ms}$, enabling instant live preview as the user types without debounce delays.
+4. **Decoupled Architecture**: Modular interfaces (`types.ts`) allow dropping in a Cassowary linear constraint solver in future iterations without altering UI code.
 
 ---
 
-## Project Structure
+## 8. Architecture
 
 ```
 src/
+├── components/
+│   ├── AdEditor.tsx             # Left fixed editor (inputs, file upload, AI prompt)
+│   ├── AdPreview.tsx            # Pure canvas preview scaler
+│   ├── AdElement.tsx            # Pure element renderer
+│   ├── SurfacePreview.tsx       # Surface wrapper
+│   ├── CustomSurface.tsx        # Dynamic custom dimension popover (e.g. 500x150)
+│   ├── CustomSurfaceForm.tsx    # Canonical form export
+│   ├── LayoutDecisions.tsx      # Transparent decision breakdown
+│   ├── LivePreviewGrid.tsx      # Responsive multi-surface grid & modal
+│   └── FileUploadField.tsx      # Dual drag-and-drop & URL field
 ├── engine/
-│   ├── types.ts          # AdElement, Surface, LayoutResult types
-│   ├── classify.ts       # Surface shape classifier (WIDE/SQUARE/TALL)
-│   ├── scale.ts          # Font size + dimension calculators
-│   ├── templates.ts      # 3 layout templates (pure TS)
-│   └── layoutEngine.ts   # Main entry — orchestrates all steps
-├── engine.test.ts        # 15 unit tests (Vitest, Node-only)
+│   ├── layoutEngine.ts          # Pure orchestrator function
+│   ├── classifySurface.ts       # Geometric aspect-ratio classifier
+│   ├── layoutTemplates.ts       # WIDE, SQUARE, and TALL layout rules
+│   ├── fitElements.ts           # Typography & dimension scaling
+│   ├── imageCrop.ts             # Crop geometry & focal point calculation
+│   └── types.ts                 # Strict TypeScript data models
 ├── data/
-│   ├── surfaces.ts       # IAB surface presets
-│   └── sampleAd.ts       # Default demo content
-└── components/
-    ├── AdEditor.tsx       # Left panel — edit content
-    ├── AdPreview.tsx      # Single surface renderer
-    ├── AdElement.tsx      # Individual element renderer
-    ├── PreviewGrid.tsx    # Grid of all surfaces
-    └── CustomSurface.tsx  # Add arbitrary surface size
+│   ├── surfaces.ts              # 5 Required default surfaces + social formats
+│   ├── sampleAd.ts              # Default headphone demo content
+│   ├── defaultAd.ts             # Canonical data export
+│   └── presets.ts               # Campaign presets (including Long Headline test)
+├── tests/
+│   └── layoutEngine.test.ts     # Canonical test entrypoint
+└── engine.test.ts               # 12 specification unit tests
 ```
 
 ---
 
-## Backend REST API
+## 9. Testing & Quality Verification
 
-The layout engine is integrated into an enterprise-grade backend microservice layer running via Vite server middleware:
+Comprehensive Vitest unit tests verify all 12 specification requirements:
 
-### Endpoints
+1. **Wide surface** $\rightarrow$ Horizontal layout
+2. **Tall surface** $\rightarrow$ Vertical column layout
+3. **Square surface** $\rightarrow$ Balanced stack layout
+4. **Long content** $\rightarrow$ Lower-priority element can be hidden
+5. **Headline** $\rightarrow$ Font size decreases when constrained
+6. **Priority-1 elements** $\rightarrow$ Remain visible whenever possible
+7. **Image aspect ratio** $\rightarrow$ Preserved without distortion
+8. **Custom dimensions** $\rightarrow$ Arbitrary dimensions work (e.g., $500 \times 150$)
+9. **Surface boundaries** $\rightarrow$ All elements remain strictly within boundaries
+10. **Non-negative dimensions** $\rightarrow$ No negative coordinates or dimensions
+11. **Graceful degradation** $\rightarrow$ Missing optional content does not crash the engine
+12. **Micro surfaces** $\rightarrow$ Handled gracefully without errors
 
-| Method | Endpoint | Description | Payload / Response |
-|---|---|---|---|
-| `GET` | `/api/health` | Service health, version, uptime | `{ "status": "healthy", "version": "1.4.0", "uptimeSec": ... }` |
-| `GET` | `/api/surfaces` | Supported IAB surface specifications | Array of surface definitions |
-| `POST` | `/api/adapt` | Computes full multi-surface layouts | `{ "elements": [...], "surfaces": [...] }` → `{ "computeLatencyMs": 0.54, "results": [...] }` |
-| `POST` | `/api/generate-ad` | AI ad content generation with Zod validation | `{ "prompt": string }` → `{ "elements": [...] }` or typed errors |
-
-### Testing the AI Content Endpoint with cURL
+### Running Tests:
 
 ```bash
-# Test successful generation (mock mode)
-curl -X POST http://localhost:5173/api/generate-ad \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "mock: Cyberpunk Smart Chronograph"}'
+npm run test
+```
 
-# Test malformed response handling
-curl -X POST http://localhost:5173/api/generate-ad \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "test:malformed"}'
-
-# Test invalid schema handling
-curl -X POST http://localhost:5173/api/generate-ad \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "test:invalid_schema"}'
+*Output:*
+```
+ ✓ src/engine.test.ts (12 tests) 12 passed (12)
+ ✓ src/tests/layoutEngine.test.ts (12 tests) 12 passed (12)
+ Test Files  2 passed (2)
+      Tests  24 passed (24)
 ```
 
 ---
 
-## Tech Stack & Architecture
+## 10. How to Run Locally
 
-| Layer | Choice | Rationale |
-|---|---|---|
-| Frontend Framework | React 19 + TypeScript + Vite | Ultra-fast DX, strictly typed, zero runtime overhead |
-| Design System | Flam Deep Dark Theme + Tailwind CSS v4 + Radix UI | Glassmorphic aesthetic, hardware-accelerated transitions |
-| Layout Engine | Pure Functional TypeScript (Zero DOM) | Deterministic, portable, sub-millisecond execution |
-| Backend Layer | Vite Middleware Engine Microservice | Exposes `/api/adapt` endpoint with live latency tracking |
-| Testing | Vitest (15/15 unit tests passing) | Exhaustive test coverage of geometry, scaling, and priority pruning |
+### Prerequisites
+- Node.js 18+
+- npm 9+
+
+### Setup
+
+```bash
+# 1. Clone repository
+git clone https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads.git
+cd Adaptive-Layout-Engine-for-Multi-Surface-Ads
+
+# 2. Install dependencies
+npm install
+
+# 3. Run development server
+npm run dev
+# Open http://localhost:5173
+
+# 4. Run test suite
+npm run test
+
+# 5. Build for production
+npm run build
+```
 
 ---
 
-*Built for the Flam SDE FE R&D Intern Assignment.*
+## 11. Future Improvements
+
+- **Cassowary Constraint Solver (`kiwi.js`)**: Transition from heuristic rules to linear inequality constraint solving for arbitrary complex element graphs.
+- **Drag-to-Override Per Surface**: Allow creative directors to manually fine-tune positions on specific surfaces while retaining global engine defaults.
+- **Learned Layout Recommendations**: Integrate ML models trained on historical CTR and heatmaps to predict optimal element hierarchies.
+- **Performance-Based Layout Selection**: Automatically split-test layout variants across surfaces to optimize ad engagement.
+- **Interactive Ad Elements**: Support video, 3D product spins, and carousel micro-interactions.
+- **Motion & Transition Animations**: Smooth layout morphing between surface orientations.
+- **Accessibility-Aware Constraints**: Automatic WCAG AAA contrast enforcement and screen-reader hierarchical ordering.

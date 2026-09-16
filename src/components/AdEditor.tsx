@@ -194,8 +194,8 @@ const AdEditor: React.FC<Props> = ({ elements, onChange }) => {
       {/* ── Subtext Description ──────────────────────────────── */}
       <FieldGroup
         icon={<AlignLeft size={13} />}
-        label="Description"
-        priority={2}
+        label="Description / Subtext"
+        priority={3}
       >
         <textarea
           className="field-input field-textarea text-xs"
@@ -222,11 +222,11 @@ const AdEditor: React.FC<Props> = ({ elements, onChange }) => {
         />
       </FieldGroup>
 
-      {/* ── Visual Asset ─────────────────────────────────────── */}
+      {/* ── Visual Asset (Hero Image) ────────────────────────── */}
       <FieldGroup
         icon={<Image size={13} />}
-        label="Primary Visual"
-        priority={2}
+        label="Hero / Product Image"
+        priority={1}
       >
         <FileUploadField
           value={byId("image")?.content ?? ""}
@@ -234,18 +234,15 @@ const AdEditor: React.FC<Props> = ({ elements, onChange }) => {
         />
       </FieldGroup>
 
-      {/* ── Brand Logo ───────────────────────────────────────── */}
+      {/* ── Brand Logo (Upload or URL) ───────────────────────── */}
       <FieldGroup
         icon={<Tag size={13} />}
         label="Brand Logo"
-        priority={2}
+        priority={1}
       >
-        <input
-          className="field-input text-xs"
-          type="url"
+        <FileUploadField
           value={byId("logo")?.content ?? ""}
-          onChange={(e) => update("logo", e.target.value)}
-          placeholder="https://..."
+          onChange={(val) => update("logo", val)}
         />
       </FieldGroup>
     </div>

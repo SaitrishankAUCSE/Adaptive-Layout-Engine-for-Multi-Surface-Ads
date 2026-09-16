@@ -48,7 +48,7 @@ export function layoutEngine(
   const area = surface.width * surface.height;
 
   // Step 1 — Priority pruning
-  const visibleElements = pruneByPriority(elements, area);
+  const { visible: visibleElements, dropped: droppedElements, pruningDecisions } = pruneByPriorityWithAudit(elements, area);
 
   // Step 2 — Classify
   const shape = classifySurface(surface);
@@ -68,24 +68,61 @@ export function layoutEngine(
       result = centeredStackTemplate(visibleElements, surface);
   }
 
-  const hiddenCount = result.positioned.filter((p) => !p.visible).length;
+  // Incorporate dropped elements so the caller has a complete audit of all elements
+  const allPositioned = [...result.positioned];
+  for (const dropped of droppedElements) {
+    // Only add if not already in result
+    if (!allPositioned.some((p) => p.id === dropped.id)) {
+      allPositioned.push({
+        id: dropped.id,
+        type: dropped.type,
+        content: dropped.content,
+        visible: false,
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        reason: "hidden",
+      });
+    }
+  }
+
+  const hiddenCount = allPositioned.filter((p) => !p.visible).length;
+  const decisions = [...pruningDecisions, ...result.decisions];
 
   return {
     surface,
     template: result.template,
-    elements: result.positioned,
+    elements: allPositioned,
     hiddenCount,
+    decisions,
   };
 }
 
-// ─── Priority pruning ─────────────────────────────────────────────────────────
+// ─── Priority pruning with audit ──────────────────────────────────────────────
 
-function pruneByPriority(elements: AdElement[], area: number): AdElement[] {
-  if (area >= DROP_P3_AREA) return elements; // all elements survive
-  if (area >= DROP_P2_AREA) {
-    // Drop priority-3
-    return elements.filter((el) => el.priority <= 2);
+function pruneByPriorityWithAudit(
+  elements: AdElement[],
+  area: number
+): { visible: AdElement[]; dropped: AdElement[]; pruningDecisions: string[] } {
+  if (area >= DROP_P3_AREA) {
+    return { visible: elements, dropped: [], pruningDecisions: [] };
   }
+
+  if (area >= DROP_P2_AREA) {
+    const visible = elements.filter((el) => el.priority <= 2);
+    const dropped = elements.filter((el) => el.priority > 2);
+    const decisions = dropped.length > 0
+      ? [`Area constraint (${area.toLocaleString()} px²): Priority-3 elements hidden first`]
+      : [];
+    return { visible, dropped, pruningDecisions: decisions };
+  }
+
   // Micro surface — only priority-1
-  return elements.filter((el) => el.priority === 1);
+  const visible = elements.filter((el) => el.priority === 1);
+  const dropped = elements.filter((el) => el.priority > 1);
+  const decisions = [
+    `Micro surface constraint (${area.toLocaleString()} px²): Preserving only critical Priority-1 elements`,
+  ];
+  return { visible, dropped, pruningDecisions: decisions };
 }

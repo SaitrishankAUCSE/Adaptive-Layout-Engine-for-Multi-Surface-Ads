@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { AdElement } from "./engine/types";
 import { SAMPLE_AD } from "./data/sampleAd";
@@ -56,14 +56,7 @@ const App: React.FC = () => {
   const [activeSurfaces, setActiveSurfaces] = useState<string[]>(
     SURFACES.map((s) => s.id)
   );
-  const [mounted, setMounted] = useState(false);
-  // Landing splash screen: shown on first load only
   const [showLanding, setShowLanding] = useState(true);
-
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 60);
-    return () => clearTimeout(t);
-  }, []);
 
   const handleEnter = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -77,9 +70,7 @@ const App: React.FC = () => {
       : visibleSurfaces.filter((s) => classifySurface(s) === filter);
 
   return (
-    <div
-      className="flex flex-col min-h-screen w-full bg-background text-foreground overflow-x-hidden selection:bg-primary/20"
-    >
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-background text-foreground selection:bg-primary/20">
 
       {/* ── Landing splash screen — overlays everything until dismissed ── */}
       {showLanding && (
@@ -93,65 +84,58 @@ const App: React.FC = () => {
       </div>
 
       {/* ══════════════════════════════════════════════════════════
-          FLOATING NAVBAR
+          TOP NAVIGATION HEADER (STRICTLY FIXED)
       ══════════════════════════════════════════════════════════ */}
-      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-[800px] px-4 pointer-events-none">
-        <header
-          className={cn(
-            "pointer-events-auto flex h-[52px] items-center justify-between rounded-full border border-white/10 bg-black/40 backdrop-blur-2xl shadow-2xl px-4",
-            "transition-all duration-700 delay-100",
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-          )}
-        >
-          {/* Left: Brand */}
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-sm">
-              <AnysizeLogo size={14} />
-            </div>
-            <span className="text-[14px] font-semibold text-[#f2f0ea] tracking-tight">
-              Anysize
-            </span>
+      <header className="flex h-14 w-full items-center justify-between border-b border-white/[0.08] bg-black/60 backdrop-blur-2xl px-5 shrink-0 z-30">
+        {/* Left: Brand */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-sm">
+            <AnysizeLogo size={14} />
           </div>
+          <span className="text-[14px] font-semibold text-[#f2f0ea] tracking-tight">
+            Anysize
+          </span>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground ml-1">
+            Multi-Surface Engine
+          </span>
+        </div>
 
-          {/* Center nav */}
-          <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white/[0.03] p-1 rounded-full border border-white/[0.05]">
-            {NAV_ITEMS.map(({ id, label }) => (
-              <button
-                key={id}
-                onClick={() => setView(id)}
-                className={cn(
-                  "flex items-center justify-center px-5 h-7 rounded-full text-xs font-medium transition-all cursor-pointer active:scale-[0.97]",
-                  view === id
-                    ? "bg-white/10 text-white shadow-sm"
-                    : "text-muted-foreground hover:text-white hover:bg-white/5"
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
+        {/* Center: View Switcher */}
+        <nav className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-full border border-white/[0.06]">
+          {NAV_ITEMS.map(({ id, label, icon }) => (
+            <button
+              key={id}
+              onClick={() => setView(id)}
+              className={cn(
+                "flex items-center gap-1.5 px-4 h-7 rounded-full text-xs font-medium transition-all cursor-pointer active:scale-[0.97]",
+                view === id
+                  ? "bg-white/10 text-white shadow-sm"
+                  : "text-muted-foreground hover:text-white hover:bg-white/5"
+              )}
+            >
+              {icon}
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
 
-          {/* Right: empty — no extraneous buttons */}
-        </header>
-      </div>
+        {/* Right: Active status count */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground font-mono bg-white/[0.03] border border-white/[0.06] px-2.5 py-1 rounded-full">
+            {filteredSurfaces.length} Formats Active
+          </span>
+        </div>
+      </header>
 
       {/* ══════════════════════════════════════════════════════════
-          BODY — MAIN DASHBOARD (PLAYGROUND)
+          MAIN WORKSPACE BODY (LEFT FIXED, RIGHT SCROLLABLE)
       ══════════════════════════════════════════════════════════ */}
-      <div
-        id="playground"
-        className={cn(
-          "relative z-10 flex w-full max-w-full px-4 gap-4 min-h-[calc(100vh-88px)] mt-[88px] pb-24 mx-auto",
-          "transition-opacity duration-700 delay-150",
-          mounted ? "opacity-100" : "opacity-0"
-        )}
-      >
-        {/* ── LEFT EDITOR PANEL ─────────────────────────────────── */}
+      <div className="flex flex-1 w-full h-[calc(100vh-56px)] overflow-hidden relative z-10">
+        {/* ── LEFT EDITOR PANEL (STRICTLY FIXED, NEVER MOVES) ───── */}
         {view === "editor" && (
           <aside
             className={cn(
-              "sticky top-[88px] flex flex-col h-[calc(100vh-108px)] shrink-0 border border-white/[0.07] rounded-xl bg-black/50 backdrop-blur-2xl overflow-hidden shadow-2xl z-20",
-              "transition-[width] duration-300 ease-in-out"
+              "h-full shrink-0 border-r border-white/[0.08] bg-black/40 backdrop-blur-2xl overflow-hidden relative z-20 transition-[width] duration-300 ease-in-out flex flex-col"
             )}
             style={{ width: panelOpen ? 340 : 48 }}
           >
@@ -175,26 +159,26 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* Toggle button — always visible, anchored to the right edge */}
+            {/* Toggle button — anchored to the right border of the sidebar */}
             <button
               onClick={() => setPanelOpen((p) => !p)}
               title={panelOpen ? "Collapse editor" : "Expand editor"}
               className={cn(
-                "absolute top-1/2 -translate-y-1/2 -right-3.5 z-20",
-                "flex h-7 w-7 items-center justify-center rounded-full",
-                "bg-black/80 border border-white/15 text-muted-foreground",
-                "hover:text-white hover:border-white/30 hover:bg-black/90",
+                "absolute top-1/2 -translate-y-1/2 -right-3 z-30",
+                "flex h-6 w-6 items-center justify-center rounded-full",
+                "bg-black/90 border border-white/20 text-muted-foreground",
+                "hover:text-white hover:border-white/40 hover:bg-black",
                 "shadow-lg transition-all cursor-pointer active:scale-95"
               )}
             >
-              {panelOpen ? <ChevronLeft size={13} /> : <ChevronRight size={13} />}
+              {panelOpen ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
             </button>
           </aside>
         )}
 
-        {/* ── SURFACES CONFIG PANEL ─────────────────────────────── */}
+        {/* ── SURFACES CONFIG PANEL (STRICTLY FIXED) ─────────────── */}
         {view === "surfaces" && (
-          <aside className="sticky top-[88px] flex flex-col h-[calc(100vh-108px)] w-72 shrink-0 border border-white/[0.07] rounded-xl bg-black/50 backdrop-blur-2xl overflow-y-auto p-4 gap-4 shadow-2xl z-20">
+          <aside className="h-full w-72 shrink-0 border-r border-white/[0.08] bg-black/40 backdrop-blur-2xl overflow-y-auto p-4 gap-4 flex flex-col z-20">
             <div>
               <h2 className="text-sm font-semibold text-[#f2f0ea] tracking-tight mb-0.5">
                 Surface Configuration
@@ -211,80 +195,78 @@ const App: React.FC = () => {
           </aside>
         )}
 
-        {/* ── MAIN CANVAS ───────────────────────────────────────── */}
-        <main className="flex-1 min-w-0 relative">
-          <div className="p-4 md:p-8">
+        {/* ── MAIN CANVAS (ONLY THIS RIGHT SIDE SCROLLS) ─────────── */}
+        <main className="flex-1 h-full overflow-y-auto relative p-6 md:p-8">
+          <AnimatePresence mode="wait">
+            {view === "editor" && (
+              <motion.div
+                key="editor"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="pb-20"
+              >
+                <div className="mb-6">
+                  <h1 className="text-xl font-semibold tracking-[-0.04em] bg-gradient-to-r from-[#f0f1c7] via-[#d0e5d8] via-[46%] to-[#ffffff] bg-clip-text text-transparent">
+                    Live Preview Canvas
+                  </h1>
+                  <p className="text-muted-foreground text-xs mt-0.5">
+                    Adapting to {filteredSurfaces.length} formats dynamically
+                  </p>
+                </div>
+                <LivePreviewGrid elements={elements} surfaces={filteredSurfaces} />
+              </motion.div>
+            )}
 
-            <AnimatePresence mode="wait">
-              {view === "editor" && (
-                <motion.div
-                  key="editor"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <div className="mb-6">
-                    <h1 className="text-xl font-semibold tracking-[-0.04em] bg-gradient-to-r from-[#f0f1c7] via-[#d0e5d8] via-[46%] to-[#ffffff] bg-clip-text text-transparent">
-                      Live Preview Canvas
-                    </h1>
-                    <p className="text-muted-foreground text-xs mt-0.5">
-                      Adapting to {filteredSurfaces.length} formats dynamically
-                    </p>
-                  </div>
-                  <LivePreviewGrid elements={elements} surfaces={filteredSurfaces} />
-                </motion.div>
-              )}
+            {view === "surfaces" && (
+              <motion.div
+                key="surfaces"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="pb-20"
+              >
+                <div className="mb-6">
+                  <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
+                    Surface Preview Validation
+                  </h1>
+                  <p className="text-muted-foreground text-xs mt-0.5">
+                    Evaluating {filteredSurfaces.length} of {visibleSurfaces.length} active formats
+                  </p>
+                </div>
+                <LivePreviewGrid elements={elements} surfaces={filteredSurfaces} />
+              </motion.div>
+            )}
 
-              {view === "surfaces" && (
-                <motion.div
-                  key="surfaces"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <div className="mb-6">
-                    <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
-                      Surface Preview Validation
-                    </h1>
-                    <p className="text-muted-foreground text-xs mt-0.5">
-                      Evaluating {filteredSurfaces.length} of {visibleSurfaces.length} active formats
-                    </p>
-                  </div>
-                  <LivePreviewGrid elements={elements} surfaces={filteredSurfaces} />
-                </motion.div>
-              )}
+            {view === "demo" && (
+              <motion.div
+                key="demo"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="space-y-10 pb-20"
+              >
+                <div>
+                  <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
+                    Heuristic Resolution Comparison
+                  </h1>
+                  <p className="text-muted-foreground text-xs mt-0.5">
+                    Analyze raw content overflow versus engine-resolved layout geometries.
+                  </p>
+                </div>
+                <CompareDemo elements={elements} />
+                <EngineInspector elements={elements} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-              {view === "demo" && (
-                <motion.div
-                  key="demo"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="space-y-10"
-                >
-                  <div>
-                    <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
-                      Heuristic Resolution Comparison
-                    </h1>
-                    <p className="text-muted-foreground text-xs mt-0.5">
-                      Analyze raw content overflow versus engine-resolved layout geometries.
-                    </p>
-                  </div>
-                  <CompareDemo elements={elements} />
-                  <EngineInspector elements={elements} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-          </div>
-
-          {/* ── FLOATING FILTER DOCK ──────────────────────────────── */}
-          <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+          {/* ── FLOATING FILTER DOCK AT BOTTOM OF CANVAS ────────── */}
+          <div className="sticky bottom-4 left-0 right-0 flex justify-center pointer-events-none mt-8">
             <div className="pointer-events-auto">
-              <div className="flex items-center gap-1 px-2 py-1.5 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+              <div className="flex items-center gap-1 px-2 py-1.5 rounded-2xl bg-black/85 border border-white/15 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
                 <SurfaceTabs
                   filter={filter}
                   onChange={setFilter}
@@ -293,7 +275,6 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>
-
         </main>
       </div>
 

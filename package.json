@@ -1,7 +1,24 @@
 {
-  "name": "flam-sde-fe-r-d",
-  "private": true,
-  "version": "0.0.0",
+  "name": "adaptive-layout-engine",
+  "version": "1.0.0",
+  "description": "Autonomous, multi-surface adaptive advertisement layout engine built with pure TypeScript, React, and Vitest.",
+  "author": "Saitrishank",
+  "license": "MIT",
+  "homepage": "https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads.git"
+  },
+  "keywords": [
+    "adaptive-layout",
+    "layout-engine",
+    "adtech",
+    "multi-surface-ads",
+    "iab-formats",
+    "typescript",
+    "react",
+    "vitest"
+  ],
   "type": "module",
   "scripts": {
     "dev": "node node_modules/vite/bin/vite.js",

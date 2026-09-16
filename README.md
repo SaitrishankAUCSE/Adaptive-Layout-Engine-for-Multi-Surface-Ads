@@ -1,5 +1,13 @@
 # Adaptive Layout Engine for Multi-Surface Ads
 
+[![CI Build](https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads/actions/workflows/ci.yml/badge.svg)](https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads/actions)
+[![Vitest](https://img.shields.io/badge/Vitest-24%2F24%20Passing-success?style=flat&logo=vitest&logoColor=white)](https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x%20Strict-blue?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19.0-61dafb?style=flat&logo=react&logoColor=black)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?style=flat&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Architecture](https://img.shields.io/badge/Engine-Zero%20DOM%20%7C%20Pure%20Function-purple?style=flat)](https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 > A pure TypeScript layout engine that takes a single structured advertisement and autonomously computes optimal, surface-specific layouts across diverse aspect ratios and dimensions without relying on DOM measurements or external constraints.
 
 ---

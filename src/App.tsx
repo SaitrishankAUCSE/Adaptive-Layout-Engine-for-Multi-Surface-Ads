@@ -215,7 +215,7 @@ const App: React.FC = () => {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="pb-20"
               >
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                   <div>
                     <h1 className="text-xl font-semibold tracking-[-0.04em] bg-gradient-to-r from-[#f0f1c7] via-[#d0e5d8] via-[46%] to-[#ffffff] bg-clip-text text-transparent">
                       Live Preview Canvas
@@ -224,7 +224,16 @@ const App: React.FC = () => {
                       Adapting to {filteredSurfaces.length} formats dynamically
                     </p>
                   </div>
-                  <CustomSurface onAdd={handleAddCustomSurface} />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center p-1 rounded-full bg-black/50 border border-white/10 backdrop-blur-xl">
+                      <SurfaceTabs
+                        filter={filter}
+                        onChange={setFilter}
+                        surfaces={visibleSurfaces}
+                      />
+                    </div>
+                    <CustomSurface onAdd={handleAddCustomSurface} />
+                  </div>
                 </div>
                 <LivePreviewGrid elements={elements} surfaces={filteredSurfaces} />
               </motion.div>
@@ -239,13 +248,22 @@ const App: React.FC = () => {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="pb-20"
               >
-                <div className="mb-6">
-                  <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
-                    Surface Preview Validation
-                  </h1>
-                  <p className="text-muted-foreground text-xs mt-0.5">
-                    Evaluating {filteredSurfaces.length} of {visibleSurfaces.length} active formats
-                  </p>
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                  <div>
+                    <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
+                      Surface Preview Validation
+                    </h1>
+                    <p className="text-muted-foreground text-xs mt-0.5">
+                      Evaluating {filteredSurfaces.length} of {visibleSurfaces.length} active formats
+                    </p>
+                  </div>
+                  <div className="flex items-center p-1 rounded-full bg-black/50 border border-white/10 backdrop-blur-xl">
+                    <SurfaceTabs
+                      filter={filter}
+                      onChange={setFilter}
+                      surfaces={visibleSurfaces}
+                    />
+                  </div>
                 </div>
                 <LivePreviewGrid elements={elements} surfaces={filteredSurfaces} />
               </motion.div>
@@ -273,19 +291,6 @@ const App: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* ── FLOATING FILTER DOCK AT BOTTOM OF CANVAS ────────── */}
-          <div className="sticky bottom-4 left-0 right-0 flex justify-center pointer-events-none mt-8">
-            <div className="pointer-events-auto">
-              <div className="flex items-center gap-1 px-2 py-1.5 rounded-2xl bg-black/85 border border-white/15 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
-                <SurfaceTabs
-                  filter={filter}
-                  onChange={setFilter}
-                  surfaces={visibleSurfaces}
-                />
-              </div>
-            </div>
-          </div>
         </main>
       </div>
 

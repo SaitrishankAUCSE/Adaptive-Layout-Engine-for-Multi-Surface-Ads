@@ -9,6 +9,7 @@ import { SurfaceTogglePanel } from "./components/SurfaceTogglePanel";
 import AdPreview from "./components/AdPreview";
 import { classifySurface } from "./engine/classify";
 import AdEditor from "./components/AdEditor";
+import { AutoEnhanceBanner } from "./components/AutoEnhanceBanner";
 
 const EngineInspector = React.lazy(() => import("./components/EngineInspector").then(module => ({ default: module.EngineInspector })));
 import { LandingScreen } from "./components/LandingScreen";
@@ -301,6 +302,23 @@ const App: React.FC = () => {
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="space-y-10 pb-20"
               >
+                <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white mb-1">
+                      Adaptive AI Engine Output
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {SURFACES.length} dynamic ad formats auto-generated from a single source of truth.
+                    </p>
+                  </div>
+                </div>
+                
+                <AutoEnhanceBanner elements={debouncedElements} surfaces={SURFACES} onChange={setElements} />
+
+                <div className="mb-12">
+                  <LivePreviewGrid elements={debouncedElements} surfaces={SURFACES} />
+                </div>
+
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">

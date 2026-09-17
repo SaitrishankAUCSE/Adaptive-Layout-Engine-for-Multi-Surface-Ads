@@ -1,7 +1,7 @@
 # Adaptive Layout Engine for Multi-Surface Ads
 
 [![CI Build](https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads/actions/workflows/ci.yml/badge.svg)](https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads/actions)
-[![Vitest](https://img.shields.io/badge/Vitest-24%2F24%20Passing-success?style=flat&logo=vitest&logoColor=white)](https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads)
+[![Vitest](https://img.shields.io/badge/Vitest-37%2F37%20Passing-success?style=flat&logo=vitest&logoColor=white)](https://github.com/SaitrishankAUCSE/Adaptive-Layout-Engine-for-Multi-Surface-Ads)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x%20Strict-blue?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.0-61dafb?style=flat&logo=react&logoColor=black)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?style=flat&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
@@ -21,10 +21,11 @@
 5. [How Priority-Based Adaptation Works](#5-how-priority-based-adaptation-works)
 6. [How Images Are Handled](#6-how-images-are-handled)
 7. [Why Rule-Based Heuristics Were Chosen](#7-why-rule-based-heuristics-were-chosen)
-8. [Architecture](#8-architecture)
-9. [Testing & Quality Verification](#9-testing--quality-verification)
-10. [How to Run Locally](#10-how-to-run-locally)
-11. [Future Improvements](#11-future-improvements)
+8. [AI-Assisted Copy Optimization ("✨ Enhance to Fit")](#8-ai-assisted-copy-optimization--enhance-to-fit)
+9. [Architecture](#9-architecture)
+10. [Testing & Quality Verification](#10-testing--quality-verification)
+11. [How to Run Locally](#11-how-to-run-locally)
+12. [Future Improvements](#12-future-improvements)
 
 ---
 
@@ -38,17 +39,23 @@ The application allows a marketer or creative designer to provide five fundament
 - **Description / Subtext**
 - **Call-to-Action (CTA)**
 
-From this single source of truth, the **Adaptive Layout Engine** autonomously computes tailored, responsive advertisement layouts for various ad surfaces:
+From this single source of truth, the **Adaptive Layout Engine** autonomously computes tailored, responsive advertisement layouts for 13 distinct industry-standard formats:
 
 ```
-                          ONE AD
-                            ↓
-                 Adaptive Layout Engine
-                            ↓
+                          ONE AD ASSET SET
+                                 ↓
+                      Adaptive Layout Engine
+                                 ↓
 ┌────────────┬────────────┬────────────┬────────────┬────────────┐
 │  728 × 90  │ 300 × 300  │ 300 × 250  │ 320 × 480  │ 1080×1920  │
 │   Banner   │   Square   │    MREC    │Interstitial│   Story    │
-└────────────┴────────────┴────────────┴────────────┴────────────┘
+├────────────┼────────────┼────────────┼────────────┼────────────┤
+│ 970 × 250  │ 300 × 600  │ 1080×1080  │ 1080×566   │ 1200×675   │
+│ Billboard  │ Half Page  │  IG Feed   │IG Landscape│   X Post   │
+├────────────┼────────────┼────────────┴────────────┴────────────┘
+│ 1128 × 191 │ 1200 × 630 │ 1280 × 720
+│  LinkedIn  │ Open Graph │ YT Thumbnail
+└────────────┴────────────┴─────────────
 ```
 
 This is **not an image resizer or CSS media query hack**. The engine mathematically computes:
@@ -94,7 +101,7 @@ flowchart TD
 
 1. **Prune by Area & Priority**: Assesses surface capacity ($\text{area} = \text{width} \times \text{height}$). Identifies whether lower-priority elements can be accommodated.
 2. **Classify Surface Geometry**: Determines whether the surface is `WIDE`, `SQUARE`, or `TALL` using aspect ratios.
-3. **Template Composition & Scoring**: Evaluates *all* layout templates against the surface and calculates a fitness score for each. The engine rewards high surface area utilization while heavily penalizing hidden or shrunk elements. The highest-scoring layout is selected dynamically.
+3. **Template Composition & Scoring**: Evaluates layout templates against the surface and calculates a fitness score for each. The engine rewards high surface area utilization while heavily penalizing hidden or shrunk elements. The highest-scoring layout is selected dynamically.
 4. **Canvas-Based Typography & Collision Resolution**: Utilizes the DOM Canvas API (`measureText`) to compute exact pixel widths of strings, ensuring 100% accurate line wrapping and bounding box constraints before clamping elements inside surface bounds.
 
 ---
@@ -105,8 +112,8 @@ Surfaces are classified by aspect ratio ($\text{AR} = \frac{\text{width}}{\text{
 
 | Category | Aspect Ratio Range | Target Formats | Composition Strategy |
 |---|---|---|---|
-| **WIDE** | $\text{AR} \ge 2.2$ | Banner ($728 \times 90$), Billboard ($970 \times 250$), Custom ($500 \times 150$) | Horizontal composition: Image left, Logo + Headline in center, CTA pinned to right edge |
-| **SQUARE** | $0.75 < \text{AR} < 2.2$ | Square ($300 \times 300$), MREC ($300 \times 250$), Feed ($1080 \times 1080$) | Balanced stacked hierarchy: Image top 40%, Logo, 2-line Headline, Subtext, Centered CTA |
+| **WIDE** | $\text{AR} \ge 2.2$ | Banner ($728 \times 90$), Billboard ($970 \times 250$), LinkedIn ($1128 \times 191$) | Horizontal composition: Image left, Logo + Headline in center, CTA pinned to right edge |
+| **SQUARE** | $0.75 < \text{AR} < 2.2$ | Square ($300 \times 300$), MREC ($300 \times 250$), Feed ($1080 \times 1080$), X / Twitter ($1200 \times 675$) | Balanced stacked hierarchy: Image top 40%, Logo, 2-line Headline, Subtext, Centered CTA |
 | **TALL** | $\text{AR} \le 0.75$ | Story ($1080 \times 1920$), Interstitial ($320 \times 480$), Half-page ($300 \times 600$) | Vertical column: Hero visual 45%, Logo, 3-line Headline, Subtext, Full-width bottom CTA |
 
 ---
@@ -122,7 +129,7 @@ Every ad asset has an explicit priority:
 
 1. **Attempt Full Fit**: Fits all five elements within available padding and bounds.
 2. **Shrink Flexible Elements**: Compresses font sizes and scales images down.
-3. **Hide Priority-3 Elements**: If vertical or horizontal space is constrained (e.g. $728 \times 90$ with a 2-line headline, or surface area $< 50,000 \text{ px}^2$), the engine automatically hides Priority-3 elements.
+3. **Hide Priority-3 Elements**: If vertical or horizontal space is constrained, the engine automatically hides Priority-3 elements.
 4. **Hide Priority-2 Elements**: On micro surfaces ($< 10,000 \text{ px}^2$), drops Priority-2 elements to ensure readability.
 5. **Protect Priority-1 Elements**: Guaranteed non-negative bounds and visibility.
 
@@ -152,7 +159,40 @@ Instead of a heavy mathematical constraint solver for the initial engine, rule-b
 
 ---
 
-## 8. Architecture
+## 8. AI-Assisted Copy Optimization ("✨ Enhance to Fit")
+
+When marketing copy is excessively long, tight ad surfaces (such as mobile banners or display leaderboards) inevitably experience text overflow or are forced to hide lower-priority content.
+
+Instead of naive text truncation, Anysize features an **autonomous copy optimization engine**:
+
+```
+                       User Ad Copy
+                            ↓
+               Surface Pre-Evaluation (13/13)
+        [If any surface has overflow / hidden content]
+                            ↓
+               ✨ AI Enhance to Fit Banner
+                            ↓
+         LLM / Deterministic Optimizer Proposal
+                            ↓
+     Strict Candidate Validation (All 13 Surfaces)
+     ├── Zod Schema Verification
+     ├── Zero Regressions on Valid Surfaces
+     ├── Priority-1 Visibility Guaranteed
+     └── Strict Score Improvement Required
+             ↙                              ↘
+   [Validation Passed]             [Validation Failed]
+   Apply Optimized Copy            Rollback to Original
+```
+
+### Key Architectural Guarantees:
+1. **Layout Engine is Source of Truth**: Success is measured exclusively by evaluating the candidate across all 13 surfaces using `evaluateAllSurfaces`. Character counts are never assumed to guarantee a fit.
+2. **Zero Regressions & Automatic Rollback**: If a candidate causes a previously fitting surface to fail or hides a Priority-1 element, the proposal is rejected immediately and the original copy is preserved.
+3. **Deterministic Mock Fallback**: In development or demo environments with no external API keys configured, a built-in deterministic optimizer (`src/engine/mockOptimizer.ts`) strips puffery, targets optimal character limits, and preserves CTA intent—passing through the exact same schema and layout validation pipeline.
+
+---
+
+## 9. Architecture
 
 ```
 src/
@@ -160,6 +200,7 @@ src/
 │   ├── AdEditor.tsx             # Left fixed editor (inputs, file upload, AI prompt)
 │   ├── AdPreview.tsx            # Pure canvas preview scaler
 │   ├── AdElement.tsx            # Pure element renderer
+│   ├── AutoEnhanceBanner.tsx    # AI "Enhance to Fit" notification banner
 │   ├── SurfacePreview.tsx       # Surface wrapper
 │   ├── CustomSurface.tsx        # Dynamic custom dimension popover (e.g. 500x150)
 │   ├── CustomSurfaceForm.tsx    # Canonical form export
@@ -172,22 +213,28 @@ src/
 │   ├── layoutTemplates.ts       # WIDE, SQUARE, and TALL layout rules
 │   ├── fitElements.ts           # Typography & dimension scaling
 │   ├── imageCrop.ts             # Crop geometry & focal point calculation
+│   ├── aiOptimizer.ts           # Multi-surface candidate validation & rollback logic
+│   ├── mockOptimizer.ts         # Deterministic copy shortener for dev & demo
+│   ├── useAIOptimizer.ts        # Reactive hook for layout analysis & optimization
 │   └── types.ts                 # Strict TypeScript data models
 ├── data/
-│   ├── surfaces.ts              # 5 Required default surfaces + social formats
+│   ├── surfaces.ts              # 13 Standard surfaces (IAB + Social formats)
 │   ├── sampleAd.ts              # Default headphone demo content
 │   ├── defaultAd.ts             # Canonical data export
 │   └── presets.ts               # Campaign presets (including Long Headline test)
 ├── tests/
-│   └── layoutEngine.test.ts     # Canonical test entrypoint
-└── engine.test.ts               # 12 specification unit tests
+│   ├── layoutEngine.test.ts     # 13 Layout engine specification tests
+│   └── aiOptimizer.test.ts      # 10 Validation & deterministic mock tests
+├── engine.test.ts               # Complete engine specification suite (14 tests)
+api/
+└── generate-ad.ts               # Serverless endpoint (Gemini, OpenAI, Mock fallback)
 ```
 
 ---
 
-## 9. Testing & Quality Verification
+## 10. Testing & Quality Verification
 
-Comprehensive Vitest unit tests verify all 12 specification requirements:
+Comprehensive Vitest unit tests verify the layout engine specifications and AI optimization safety:
 
 1. **Wide surface** $\rightarrow$ Horizontal layout
 2. **Tall surface** $\rightarrow$ Vertical column layout
@@ -201,6 +248,9 @@ Comprehensive Vitest unit tests verify all 12 specification requirements:
 10. **Non-negative dimensions** $\rightarrow$ No negative coordinates or dimensions
 11. **Graceful degradation** $\rightarrow$ Missing optional content does not crash the engine
 12. **Micro surfaces** $\rightarrow$ Handled gracefully without errors
+13. **Surface audit** $\rightarrow$ Verified across all 13 supported surfaces
+14. **Deterministic mock optimization** $\rightarrow$ Verified deterministic shortening & filler stripping
+15. **Strict candidate validation** $\rightarrow$ Confirmed acceptance only on genuine improvements and rejection on regressions
 
 ### Running Tests:
 
@@ -210,15 +260,18 @@ npm run test
 
 *Output:*
 ```
- ✓ src/engine.test.ts (12 tests) 12 passed (12)
- ✓ src/tests/layoutEngine.test.ts (12 tests) 12 passed (12)
- Test Files  2 passed (2)
-      Tests  24 passed (24)
+ ✓ src/tests/aiOptimizer.test.ts (10 tests)
+ ✓ src/engine.test.ts (14 tests)
+ ✓ src/tests/layoutEngine.test.ts (13 tests)
+
+ Test Files  3 passed (3)
+      Tests  37 passed (37)
+   Duration  1.34s
 ```
 
 ---
 
-## 10. How to Run Locally
+## 11. How to Run Locally
 
 ### Prerequisites
 - Node.js 18+
@@ -247,7 +300,7 @@ npm run build
 
 ---
 
-## 11. Future Improvements
+## 12. Future Improvements
 
 - **Cassowary Constraint Solver (`kiwi.js`)**: Transition from heuristic rules to linear inequality constraint solving for arbitrary complex element graphs.
 - **Drag-to-Override Per Surface**: Allow creative directors to manually fine-tune positions on specific surfaces while retaining global engine defaults.

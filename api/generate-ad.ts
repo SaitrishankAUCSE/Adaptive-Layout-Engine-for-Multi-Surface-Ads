@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { generateDeterministicMockElements } from '../src/engine/mockOptimizer.ts';
 
 declare const process: any;
 
@@ -96,30 +97,9 @@ export default async function handler(req: any, res: any) {
       }
       const data = (await response.json()) as any;
       rawLlmText = data.choices?.[0]?.message?.content || '';
-    } else if (process.env.MOCK_LLM === 'true' || prompt.startsWith('mock:') || !geminiKey) {
-      const cleanPrompt = prompt.replace(/^mock:\s*/, '');
-      rawLlmText = JSON.stringify({
-        elements: [
-          {
-            id: 'headline',
-            type: 'headline',
-            content: cleanPrompt.length > 50 ? cleanPrompt.slice(0, 50) : `Experience Premium ${cleanPrompt}`,
-            priority: 1,
-          },
-          {
-            id: 'subtext',
-            type: 'subtext',
-            content: `Engineered for modern performance. Discover next-generation ${cleanPrompt} today.`,
-            priority: 2,
-          },
-          {
-            id: 'cta',
-            type: 'cta',
-            content: 'Discover Now',
-            priority: 1,
-          },
-        ],
-      });
+    } else if (process.env.MOCK_LLM === 'true' || prompt.startsWith('mock:') || (!geminiKey && !openaiKey)) {
+      const elements = generateDeterministicMockElements(prompt);
+      rawLlmText = JSON.stringify({ elements });
     } else {
       return res.status(503).json({
         error: 'llm_unavailable',

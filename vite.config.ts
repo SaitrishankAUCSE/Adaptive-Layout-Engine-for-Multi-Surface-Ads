@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { z } from 'zod'
+import { generateDeterministicMockElements } from './src/engine/mockOptimizer.ts'
 
 const elementSchema = z.object({
   id: z.string(),
@@ -141,30 +142,9 @@ function backendApiPlugin(): Plugin {
                 }
                 const data = (await response.json()) as any;
                 rawLlmText = data.choices?.[0]?.message?.content || '';
-              } else if (process.env.MOCK_LLM === 'true' || prompt.startsWith('mock:')) {
-                const cleanPrompt = prompt.replace(/^mock:\s*/, '');
-                rawLlmText = JSON.stringify({
-                  elements: [
-                    {
-                      id: 'headline',
-                      type: 'headline',
-                      content: cleanPrompt.length > 50 ? cleanPrompt.slice(0, 50) : `Experience Premium ${cleanPrompt}`,
-                      priority: 1,
-                    },
-                    {
-                      id: 'subtext',
-                      type: 'subtext',
-                      content: `Engineered for modern performance. Discover next-generation ${cleanPrompt} today.`,
-                      priority: 2,
-                    },
-                    {
-                      id: 'cta',
-                      type: 'cta',
-                      content: 'Discover Now',
-                      priority: 1,
-                    },
-                  ],
-                });
+              } else if (process.env.MOCK_LLM === 'true' || prompt.startsWith('mock:') || (!geminiKey && !openaiKey)) {
+                const elements = generateDeterministicMockElements(prompt);
+                rawLlmText = JSON.stringify({ elements });
               } else {
                 res.statusCode = 503;
                 return res.end(

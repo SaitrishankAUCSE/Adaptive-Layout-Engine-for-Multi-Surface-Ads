@@ -3,7 +3,6 @@
 import {
   useEffect,
   useId,
-  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -31,230 +30,212 @@ type SvgPathDrawingTextAnimationProps = {
   className?: string;
 };
 
-function loadImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("svg raster failed"));
-    img.src = url;
-  });
-}
 
-function countOpaque(ctx: CanvasRenderingContext2D, w: number, h: number): number {
-  const data = ctx.getImageData(0, 0, w, h).data;
-  let n = 0;
-  for (let i = 3; i < data.length; i += 4) {
-    if (data[i] > 12) n += 1;
-  }
-  return n;
-}
-
-async function rasterInk(
-  source: SVGSVGElement,
-  apply: (text: SVGTextElement) => void,
-): Promise<number> {
-  const clone = source.cloneNode(true) as SVGSVGElement;
-  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  const text = clone.querySelector("text");
-  if (!text) return 0;
-  apply(text as SVGTextElement);
-  text.setAttribute("stroke", "#ffffff");
-  (text as SVGTextElement).style.stroke = "#ffffff";
-
-  const vb = source.viewBox.baseVal;
-  const w = Math.max(1, Math.round(vb.width || 800));
-  const h = Math.max(1, Math.round(vb.height || 160));
-  clone.setAttribute("width", String(w));
-  clone.setAttribute("height", String(h));
-  clone.style.visibility = "visible";
-
-  const xml = new XMLSerializer().serializeToString(clone);
-  const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  try {
-    const img = await loadImage(url);
-    const cw = Math.max(1, Math.round(w * 0.45));
-    const ch = Math.max(1, Math.round(h * 0.45));
-    const canvas = document.createElement("canvas");
-    canvas.width = cw;
-    canvas.height = ch;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return 0;
-    ctx.clearRect(0, 0, cw, ch);
-    ctx.drawImage(img, 0, 0, cw, ch);
-    return countOpaque(ctx, cw, ch);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
-/** Smallest dash length that renders the same ink as the finished glyph */
-async function measureExactDashLength(svg: SVGSVGElement): Promise<number> {
-  const full = await rasterInk(svg, (text) => {
-    text.style.strokeDasharray = "none";
-    text.style.strokeDashoffset = "0";
-  });
-  if (full <= 0) {
-    throw new Error("empty ink");
-  }
-
-  const covered = async (dash: number) => {
-    const ink = await rasterInk(svg, (text) => {
-      text.style.strokeDasharray = `${dash} 100000`;
-      text.style.strokeDashoffset = "0";
-    });
-    return ink >= full * 0.994;
-  };
-
-  let hi = 64;
-  while (hi < 24000 && !(await covered(hi))) {
-    hi *= 2;
-  }
-
-  let lo = 1;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (await covered(mid)) hi = mid;
-    else lo = mid + 1;
-  }
-
-  return Math.max(1, lo);
-}
-
-/**
- * Draws SVG text via stroke-dashoffset. The loop restarts exactly when the
- * real glyph is fully drawn, so it never idles on the finished shape.
- */
 function SvgPathDrawingTextAnimation({
   text,
-  fromColor = "#f093fb",
-  toColor = "#f5576c",
-  strokeWidth = 2,
-  durationSec = 5.5,
-  pauseSec = 3,
+  fromColor = "#f0f1c7",
+  toColor = "#c8dfd0",
+  strokeWidth = 2.4,
+  durationSec = 2.6,
+  pauseSec = 2.2,
   loop = true,
-  viewBoxWidth = 800,
-  viewBoxHeight = 160,
-  fontSize = 88,
+  viewBoxWidth = 860,
+  viewBoxHeight = 240,
+  fontSize = 148,
   className,
 }: SvgPathDrawingTextAnimationProps) {
   const reactId = useId().replace(/:/g, "");
   const gradientId = `pathGradient-${reactId}`;
-  const svgRef = useRef<SVGSVGElement>(null);
+  const glowId = `pathGlow-${reactId}`;
   const textRef = useRef<SVGTextElement>(null);
-  const [dashLength, setDashLength] = useState(0);
-  const reduceMotion = useReducedMotion();
+  const glowRef = useRef<SVGTextElement>(null);
+  const [fillOpacity, setFillOpacity] = useState(0);
   const display = text.trim();
 
   useEffect(() => {
-    if (!display || reduceMotion) return;
-    const svg = svgRef.current;
-    if (!svg) return;
+    if (!display) return;
 
-    let cancelled = false;
-    const run = async () => {
-      try {
-        await document.fonts.ready;
-        if (cancelled || !svgRef.current) return;
-        const dash = await measureExactDashLength(svgRef.current);
-        if (!cancelled) setDashLength(dash);
-      } catch {
-        const el = textRef.current;
-        if (!el || cancelled) return;
-        const width = el.getComputedTextLength() || display.length * fontSize * 0.62;
-        setDashLength(Math.max(1, Math.ceil(width * 1.15)));
-      }
-    };
+    let animId: number;
+    let pauseTimer: ReturnType<typeof setTimeout>;
+    let isCancelled = false;
 
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, [display, fontSize, viewBoxWidth, strokeWidth, reduceMotion]);
+    // Glyph perimeter for the largest letter at this font size is ~750px
+    const GLYPH_PERIMETER = 850;
+    const drawMs = Math.max(1200, durationSec * 1000);
+    const pauseMs = Math.max(800, pauseSec * 1000);
 
-  useLayoutEffect(() => {
     const el = textRef.current;
-    if (!el) return;
-    if (reduceMotion || dashLength <= 0) {
-      el.style.strokeDashoffset = "0";
-      el.style.strokeDasharray = "none";
-      return;
-    }
+    const glowEl = glowRef.current;
 
-    el.style.strokeDasharray = `${dashLength} ${dashLength}`;
-    el.style.strokeDashoffset = String(dashLength);
-
-    const drawMs = Math.max(0.8, durationSec) * 1000;
-    const pauseMs = Math.max(0, (pauseSec ?? 3)) * 1000;
-    const unitsPerMs = dashLength / drawMs;
-    let offset = dashLength;
-    let last = performance.now();
-    let raf = 0;
-    let pauseTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const tick = (now: number) => {
-      const dt = Math.min(48, now - last);
-      last = now;
-      offset -= unitsPerMs * dt;
-      if (offset <= 0) {
-        // Name is fully drawn — hold it visible
-        el.style.strokeDashoffset = "0";
-        if (!loop) return;
-        // Pause pauseSec seconds then restart the draw
-        pauseTimer = setTimeout(() => {
-          pauseTimer = null;
-          offset = dashLength;
-          last = performance.now();
-          raf = window.requestAnimationFrame(tick);
-        }, pauseMs);
-        return;
+    const setupElements = (offset: number) => {
+      if (el) {
+        el.style.strokeDasharray = `${GLYPH_PERIMETER} ${GLYPH_PERIMETER}`;
+        el.style.strokeDashoffset = String(offset);
       }
-      el.style.strokeDashoffset = String(offset);
-      raf = window.requestAnimationFrame(tick);
+      if (glowEl) {
+        glowEl.style.strokeDasharray = `${GLYPH_PERIMETER} ${GLYPH_PERIMETER}`;
+        glowEl.style.strokeDashoffset = String(offset);
+      }
     };
 
-    raf = window.requestAnimationFrame(tick);
-    return () => {
-      window.cancelAnimationFrame(raf);
-      if (pauseTimer !== null) clearTimeout(pauseTimer);
+    let start = performance.now();
+    setupElements(GLYPH_PERIMETER);
+    setFillOpacity(0);
+
+    const step = (now: number) => {
+      if (isCancelled) return;
+      const elapsed = now - start;
+
+      if (elapsed < drawMs) {
+        const progress = Math.min(1, elapsed / drawMs);
+        // Smooth ease-in-out cubic
+        const ease =
+          progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+        const currentOffset = GLYPH_PERIMETER * (1 - ease);
+        setupElements(currentOffset);
+        setFillOpacity(progress > 0.8 ? (progress - 0.8) * 5 * 0.08 : 0);
+
+        animId = requestAnimationFrame(step);
+      } else {
+        // Fully drawn
+        setupElements(0);
+        setFillOpacity(0.08);
+
+        if (!loop) return;
+
+        pauseTimer = setTimeout(() => {
+          if (isCancelled) return;
+
+          // Brief fade-out transition before redrawing
+          const fadeStart = performance.now();
+          const fadeDuration = 600;
+
+          const fadeStep = (fadeNow: number) => {
+            if (isCancelled) return;
+            const fadeElapsed = fadeNow - fadeStart;
+            if (fadeElapsed < fadeDuration) {
+              const fadeProgress = fadeElapsed / fadeDuration;
+              const eraseOffset = GLYPH_PERIMETER * fadeProgress;
+              setupElements(eraseOffset);
+              setFillOpacity(0.08 * (1 - fadeProgress));
+              animId = requestAnimationFrame(fadeStep);
+            } else {
+              // Restart loop cleanly
+              start = performance.now();
+              setupElements(GLYPH_PERIMETER);
+              setFillOpacity(0);
+              animId = requestAnimationFrame(step);
+            }
+          };
+
+          animId = requestAnimationFrame(fadeStep);
+        }, pauseMs);
+      }
     };
-  }, [dashLength, durationSec, pauseSec, loop, reduceMotion]);
+
+    // Small delay to guarantee DOM paint before starting
+    const initTimer = setTimeout(() => {
+      start = performance.now();
+      animId = requestAnimationFrame(step);
+    }, 150);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(initTimer);
+      clearTimeout(pauseTimer);
+      cancelAnimationFrame(animId);
+    };
+  }, [display, durationSec, pauseSec, loop]);
 
   if (!display) return null;
-
-  const ready = dashLength > 0 || Boolean(reduceMotion);
 
   return (
     <div
       className={cn(
-        "flex min-h-[200px] w-full items-center justify-center",
+        "flex min-h-[200px] w-full items-center justify-center select-none",
         className,
       )}
     >
       <svg
-        ref={svgRef}
         width="1000"
-        height="420"
+        height="320"
         viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
-        className="h-auto w-full max-w-full"
+        className="h-auto w-full max-w-full drop-shadow-[0_0_40px_rgba(240,241,199,0.18)]"
         role="img"
         aria-label={display}
-        style={{ visibility: ready ? "visible" : "hidden" }}
       >
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={fromColor} />
-            <stop offset="100%" stopColor={toColor} />
+            <stop offset="0%" stopColor={fromColor}>
+              <animate
+                attributeName="stop-color"
+                values={`${fromColor}; ${toColor}; ${fromColor}`}
+                dur="6s"
+                repeatCount="indefinite"
+              />
+            </stop>
+            <stop offset="50%" stopColor={toColor}>
+              <animate
+                attributeName="stop-color"
+                values={`${toColor}; ${fromColor}; ${toColor}`}
+                dur="6s"
+                repeatCount="indefinite"
+              />
+            </stop>
+            <stop offset="100%" stopColor={fromColor}>
+              <animate
+                attributeName="stop-color"
+                values={`${fromColor}; ${toColor}; ${fromColor}`}
+                dur="6s"
+                repeatCount="indefinite"
+              />
+            </stop>
           </linearGradient>
+
+          {/* Diffused bloom glow filter */}
+          <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
+        {/* Ambient background bloom stroke */}
+        <text
+          ref={glowRef}
+          x="50%"
+          y="50%"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="none"
+          stroke={`url(#${gradientId})`}
+          strokeWidth={strokeWidth * 2.8}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          fontSize={fontSize}
+          fontWeight="bold"
+          fontFamily="Arial, Helvetica, sans-serif"
+          letterSpacing="0.02em"
+          opacity="0.35"
+          filter={`url(#${glowId})`}
+        >
+          {display}
+        </text>
+
+        {/* Crisp foreground stroke + luminous inner fill */}
         <text
           ref={textRef}
           x="50%"
           y="50%"
           textAnchor="middle"
           dominantBaseline="middle"
-          fill="none"
+          fill={fromColor}
+          fillOpacity={fillOpacity}
           stroke={`url(#${gradientId})`}
           strokeWidth={strokeWidth}
           strokeLinejoin="round"
@@ -263,6 +244,7 @@ function SvgPathDrawingTextAnimation({
           fontWeight="bold"
           fontFamily="Arial, Helvetica, sans-serif"
           letterSpacing="0.02em"
+          className="transition-fill duration-300"
         >
           {display}
         </text>

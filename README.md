@@ -84,12 +84,12 @@ $$\text{layoutEngine}(\text{elements: AdElement[]}, \text{surface: Surface}) \lo
 ### Execution Pipeline
 
 ```mermaid
-graph TD
-    A[Input: Ad Elements + Surface Dimensions] --> B[Step 1: Priority-Based Pruning by Surface Area]
-    B --> C[Step 2: Geometric Surface Classification AR = W / H]
-    C --> D[Step 3: Template & Composition Selection]
-    D --> E[Step 4: Dimension Allocation, Font Sizing & Collision Check]
-    E --> F[Output: LayoutResult with Decisions & Exact Pixel Coordinates]
+flowchart TD
+    A["Input: Ad Elements + Surface Dimensions"] --> B["Step 1: Priority-Based Pruning by Surface Area"]
+    B --> C["Step 2: Geometric Surface Classification (AR = W / H)"]
+    C --> D["Step 3: Template & Composition Selection"]
+    D --> E["Step 4: Dimension Allocation, Font Sizing & Collision Check"]
+    E --> F["Output: LayoutResult with Decisions & Exact Pixel Coordinates"]
 ```
 
 1. **Prune by Area & Priority**: Assesses surface capacity ($\text{area} = \text{width} \times \text{height}$). Identifies whether lower-priority elements can be accommodated.

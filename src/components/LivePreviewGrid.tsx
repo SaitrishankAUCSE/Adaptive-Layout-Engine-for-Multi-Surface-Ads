@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import type { AdElement as AdElementType, Surface, LayoutResult } from "../engine/types";
 import { layoutEngine } from "../engine/layoutEngine";
 import { classifySurface } from "../engine/classify";
+import { isElementFullyFitted } from "../engine/textFit";
 import AdPreview from "./AdPreview";
 import {
   Check,
@@ -95,12 +96,20 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
           const activeElements = elements.filter((el) => el.content && el.content.trim() !== "");
           const totalElements = activeElements.length;
           const visibleCount = result
-            ? result.elements.filter(
-                (p) => p.visible && p.content && p.content.trim() !== "" && p.width > 0 && p.height > 0
-              ).length
+            ? result.elements.filter((p) => isElementFullyFitted(p)).length
             : 0;
           const isFullyVisible = visibleCount === totalElements;
-          const decisions = result?.decisions ?? [];
+          const truncatedTypes = result
+            ? result.elements
+                .filter((p) => p.visible && p.content && !isElementFullyFitted(p))
+                .map((p) => p.type)
+            : [];
+          const decisions = [
+            ...(result?.decisions ?? []),
+            ...truncatedTypes.map(
+              (type) => `${type.charAt(0).toUpperCase() + type.slice(1)} text clipped by container bounds (-1 visible)`
+            ),
+          ];
 
           return (
             <div
@@ -246,11 +255,20 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
         const modalActive = elements.filter((el) => el.content && el.content.trim() !== "");
         const modalTotal = modalActive.length;
         const modalVisCount = modalResult
-          ? modalResult.elements.filter(
-              (p) => p.visible && p.content && p.content.trim() !== "" && p.width > 0 && p.height > 0
-            ).length
+          ? modalResult.elements.filter((p) => isElementFullyFitted(p)).length
           : 0;
         const modalFullyVis = modalVisCount === modalTotal;
+        const modalTruncatedTypes = modalResult
+          ? modalResult.elements
+              .filter((p) => p.visible && p.content && !isElementFullyFitted(p))
+              .map((p) => p.type)
+          : [];
+        const modalDecisions = [
+          ...(modalResult?.decisions ?? []),
+          ...modalTruncatedTypes.map(
+            (type) => `${type.charAt(0).toUpperCase() + type.slice(1)} text clipped by container bounds (-1 visible)`
+          ),
+        ];
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-6">
@@ -301,7 +319,7 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
                   Autonomous Engine Decisions
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {modalResult?.decisions.map((d, i) => (
+                  {modalDecisions.map((d, i) => (
                     <span
                       key={i}
                       className="text-xs bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-white/80"

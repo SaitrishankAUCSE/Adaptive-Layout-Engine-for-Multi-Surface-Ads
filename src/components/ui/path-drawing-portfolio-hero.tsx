@@ -350,11 +350,9 @@ export default function PathDrawingPortfolioHero({
             {tagline}
           </motion.p>
         ) : null}
+
+        {children}
       </div>
-
-
-
-      {children}
       <style>{`
         @keyframes path-drawing-scroll-cue {
           0%, 100% { transform: scaleY(1); opacity: 0.55; }

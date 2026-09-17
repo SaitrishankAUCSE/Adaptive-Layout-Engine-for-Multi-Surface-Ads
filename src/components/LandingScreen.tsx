@@ -40,50 +40,50 @@ export function LandingScreen({ onEnter }: LandingScreenProps) {
             tagline="One composition. Every format. Zero manual work."
             fromColor="#f0f1c7"
             toColor="#c8dfd0"
-            className="absolute inset-0"
-          />
-
-          {/* "Open Dashboard" button — fades in at 1.5 s */}
-          <motion.div
-            className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 1.5, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full h-full"
           >
-            <button
-              onClick={handleEnter}
-              disabled={exiting}
-              className="
-                group relative flex items-center gap-2.5
-                h-11 px-7 rounded-full
-                bg-white/[0.07] border border-white/[0.13]
-                text-[#f2f0ea] text-[13px] font-semibold tracking-wide
-                backdrop-blur-2xl
-                hover:bg-white/[0.13] hover:border-white/[0.22]
-                hover:shadow-[0_0_36px_rgba(240,241,199,0.1)]
-                active:scale-[0.97]
-                transition-all duration-300 cursor-pointer
-                disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden
-              "
+            {/* "Open Dashboard" button — cleanly positioned below tagline */}
+            <motion.div
+              className="mt-8 flex flex-col items-center gap-2.5 z-20"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* Radial inner glow */}
-              <span className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(240,241,199,0.07),transparent)]" />
-              <span className="relative z-10">Open Dashboard</span>
-              <ArrowRight
-                size={14}
-                className="relative z-10 group-hover:translate-x-0.5 transition-transform duration-200"
-              />
-            </button>
+              <button
+                onClick={handleEnter}
+                disabled={exiting}
+                className="
+                  group relative flex items-center gap-2.5
+                  h-11 px-7 rounded-full
+                  bg-white/[0.07] border border-white/[0.13]
+                  text-[#f2f0ea] text-[13px] font-semibold tracking-wide
+                  backdrop-blur-2xl
+                  hover:bg-white/[0.13] hover:border-white/[0.22]
+                  hover:shadow-[0_0_36px_rgba(240,241,199,0.1)]
+                  active:scale-[0.97]
+                  transition-all duration-300 cursor-pointer
+                  disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden
+                "
+              >
+                {/* Radial inner glow */}
+                <span className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(240,241,199,0.07),transparent)]" />
+                <span className="relative z-10">Open Dashboard</span>
+                <ArrowRight
+                  size={14}
+                  className="relative z-10 group-hover:translate-x-0.5 transition-transform duration-200"
+                />
+              </button>
 
-            <motion.p
-              className="text-[9.5px] tracking-[0.24em] uppercase text-white/22 font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 2.2, duration: 0.6 }}
-            >
-              Press to continue
-            </motion.p>
-          </motion.div>
+              <motion.p
+                className="text-[9.5px] tracking-[0.24em] uppercase text-white/30 font-medium"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.8, duration: 0.6 }}
+              >
+                Press to continue
+              </motion.p>
+            </motion.div>
+          </PathDrawingPortfolioHero>
 
           {/* Film-grain noise */}
           <div

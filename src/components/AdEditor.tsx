@@ -146,15 +146,25 @@ const AdEditor: React.FC<Props> = ({ elements, onChange }) => {
             type="button"
             onClick={handleGenerate}
             disabled={aiLoading || !aiPrompt.trim()}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-white bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.09] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 flex items-center justify-center gap-1.5 transition-all"
+            className={`relative overflow-hidden px-3.5 py-1.5 rounded-lg text-xs font-medium border disabled:cursor-not-allowed cursor-pointer shrink-0 flex items-center justify-center gap-1.5 transition-all group ${
+              aiLoading
+                ? "bg-primary/10 border-primary/30 text-primary-foreground disabled:opacity-90"
+                : "bg-white/[0.06] border-white/[0.09] text-white hover:bg-white/[0.1] active:scale-[0.98] disabled:opacity-40"
+            }`}
           >
+            {aiLoading && (
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+            )}
             {aiLoading ? (
               <>
-                <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Generating</span>
+                <span className="inline-block w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin relative z-10" />
+                <span className="relative z-10 text-primary font-semibold">Generating</span>
               </>
             ) : (
-              "Generate"
+              <>
+                <Sparkles size={13} className="text-primary/70 group-hover:text-primary transition-colors" />
+                <span>Generate</span>
+              </>
             )}
           </button>
         </div>

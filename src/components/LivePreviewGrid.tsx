@@ -114,7 +114,7 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
           return (
             <div
               key={surface.id}
-              className="flex flex-col rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-2xl p-4 transition-all duration-300 hover:border-white/20 hover:shadow-[0_16px_48px_rgba(0,0,0,0.7)] group/surface"
+              className="relative flex flex-col rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-2xl p-4 transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_16px_48px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.1)] group/surface"
             >
               {/* Surface Header */}
               <div className="flex items-start justify-between gap-3 mb-3">
@@ -199,13 +199,16 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
                   className="flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer hover:underline"
                 >
                   {isFullyVisible ? (
-                    <span className="flex items-center gap-1 text-emerald-400/90 font-medium">
+                    <span className="flex items-center gap-1 text-emerald-400/90 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                       <ShieldCheck size={11} />
                       {visibleCount}/{totalElements} visible
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-amber-400/90 font-medium">
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="flex items-center gap-1 text-amber-400/90 font-medium bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shadow-[0_0_10px_rgba(251,191,36,0.1)]">
+                      <span className="relative flex h-1.5 w-1.5 mr-0.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                      </span>
                       {visibleCount}/{totalElements} visible
                     </span>
                   )}

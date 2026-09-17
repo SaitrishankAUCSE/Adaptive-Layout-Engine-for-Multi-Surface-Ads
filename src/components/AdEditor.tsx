@@ -24,7 +24,7 @@ const PRIORITY_META = {
 };
 
 const AdEditor: React.FC<Props> = ({ elements, onChange }) => {
-  const [selectedPresetId, setSelectedPresetId] = useState<string>("luxury-watch");
+  const [selectedPresetId, setSelectedPresetId] = useState<string>("wireless-headphones");
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -45,14 +45,15 @@ const AdEditor: React.FC<Props> = ({ elements, onChange }) => {
       const data = await res.json().catch(() => null);
 
       if (!res.ok || !data || data.error) {
+        if (data?.error === "invalid_schema") {
+          console.error("AI Schema Validation Details:", data.details || data.message);
+        }
         const errorMsg =
           data?.error === "malformed_response"
-            ? "Malformed response from model."
+            ? "The AI response couldn't be read. Try rephrasing your prompt."
             : data?.error === "invalid_schema"
-            ? "Invalid schema in model output."
-            : data?.error === "llm_unavailable"
-            ? "LLM service unavailable."
-            : data?.message || "Failed to generate content.";
+            ? "The AI response didn't match the expected ad format. Try rephrasing your prompt."
+            : "Unable to generate content. Please try again.";
         setAiError(errorMsg);
         return;
       }
@@ -69,8 +70,9 @@ const AdEditor: React.FC<Props> = ({ elements, onChange }) => {
           })
         );
       }
-    } catch {
-      setAiError("Network error. Could not reach server.");
+    } catch (err) {
+      console.error("AI generation network error:", err);
+      setAiError("Unable to generate content. Please try again.");
     } finally {
       setAiLoading(false);
     }
@@ -157,14 +159,14 @@ const AdEditor: React.FC<Props> = ({ elements, onChange }) => {
           </button>
         </div>
         {aiError && (
-          <div className="text-[11px] text-red-400 mt-1.5 flex items-center justify-between">
-            <span>{aiError}</span>
+          <div className="mt-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/25 flex items-center justify-between gap-2">
+            <span className="text-[11px] text-red-300 leading-tight">{aiError}</span>
             <button
               type="button"
               onClick={handleGenerate}
-              className="text-[11px] text-red-300 underline hover:text-white ml-2 cursor-pointer shrink-0"
+              className="text-[11px] font-semibold text-red-200 hover:text-white px-2.5 py-1 rounded bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 transition-all cursor-pointer shrink-0"
             >
-              Try again
+              Retry
             </button>
           </div>
         )}

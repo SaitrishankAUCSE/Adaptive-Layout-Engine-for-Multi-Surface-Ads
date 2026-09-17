@@ -51,8 +51,41 @@ const AnysizeLogo = ({ size = 14 }: { size?: number }) => (
   </svg>
 );
 
+const VALID_VIEWS: View[] = ["editor", "surfaces", "demo"];
+
+const getInitialView = (): View => {
+  if (typeof window !== "undefined") {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (VALID_VIEWS.includes(hash as View)) {
+      return hash as View;
+    }
+    const saved = localStorage.getItem("anysize_view") || sessionStorage.getItem("anysize_view");
+    if (saved && VALID_VIEWS.includes(saved as View)) {
+      return saved as View;
+    }
+  }
+  return "editor";
+};
+
+const getInitialShowLanding = (): boolean => {
+  if (typeof window !== "undefined") {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash === "landing") {
+      return true;
+    }
+    if (VALID_VIEWS.includes(hash as View)) {
+      return false;
+    }
+    const entered = localStorage.getItem("anysize_entered") || sessionStorage.getItem("anysize_entered");
+    if (entered === "true") {
+      return false;
+    }
+  }
+  return true;
+};
+
 const App: React.FC = () => {
-  const [view, setView] = useState<View>("editor");
+  const [view, setView] = useState<View>(getInitialView);
   const [panelOpen, setPanelOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [filter, setFilter] = useState<FilterShape>("ALL");
@@ -62,8 +95,22 @@ const App: React.FC = () => {
   const [activeSurfaces, setActiveSurfaces] = useState<string[]>(
     SURFACES.map((s) => s.id)
   );
-  const [showLanding, setShowLanding] = useState(true);
+  const [showLanding, setShowLanding] = useState<boolean>(getInitialShowLanding);
   const [demoSurfaceId, setDemoSurfaceId] = useState<string>(SURFACES[0].id);
+
+  React.useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      if (hash === "landing") {
+        setShowLanding(true);
+      } else if (VALID_VIEWS.includes(hash as View)) {
+        setView(hash as View);
+        setShowLanding(false);
+      }
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -74,11 +121,29 @@ const App: React.FC = () => {
 
   const handleEnter = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    if (typeof window !== "undefined") {
+      localStorage.setItem("anysize_entered", "true");
+      sessionStorage.setItem("anysize_entered", "true");
+      localStorage.setItem("anysize_view", view);
+      sessionStorage.setItem("anysize_view", view);
+      if (window.history.replaceState && !window.location.hash) {
+        window.history.replaceState(null, "", `#${view}`);
+      }
+    }
     setShowLanding(false);
   };
 
   const handleViewChange = (newView: View) => {
     setView(newView);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("anysize_view", newView);
+      sessionStorage.setItem("anysize_view", newView);
+      localStorage.setItem("anysize_entered", "true");
+      sessionStorage.setItem("anysize_entered", "true");
+      if (window.history.replaceState) {
+        window.history.replaceState(null, "", `#${newView}`);
+      }
+    }
     setMobileDrawerOpen(false);
   };
 

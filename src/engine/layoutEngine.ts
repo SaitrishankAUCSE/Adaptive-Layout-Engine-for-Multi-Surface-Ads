@@ -45,6 +45,10 @@ export function layoutEngine(
   elements: AdElement[],
   surface: Surface
 ): LayoutResult {
+  if (surface.width <= 0 || surface.height <= 0) {
+    throw new Error(`Invalid surface dimensions: ${surface.width}x${surface.height}. Width and height must be strictly positive.`);
+  }
+
   const area = surface.width * surface.height;
 
   // Step 1 — Priority pruning

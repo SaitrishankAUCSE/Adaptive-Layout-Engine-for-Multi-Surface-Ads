@@ -55,11 +55,19 @@ const App: React.FC = () => {
   const [panelOpen, setPanelOpen] = useState(true);
   const [filter, setFilter] = useState<FilterShape>("ALL");
   const [elements, setElements] = useState<AdElement[]>(SAMPLE_AD);
+  const [debouncedElements, setDebouncedElements] = useState<AdElement[]>(SAMPLE_AD);
   const [surfacesList, setSurfacesList] = useState<Surface[]>(SURFACES);
   const [activeSurfaces, setActiveSurfaces] = useState<string[]>(
     SURFACES.map((s) => s.id)
   );
   const [showLanding, setShowLanding] = useState(true);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedElements(elements);
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [elements]);
 
   const handleEnter = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -78,7 +86,10 @@ const App: React.FC = () => {
       : visibleSurfaces.filter((s) => classifySurface(s) === filter);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-background text-foreground selection:bg-primary/20">
+    <div
+      style={{ width: "calc(100vw / 0.75)", height: "calc(100vh / 0.75)" }}
+      className="flex flex-col overflow-hidden bg-background text-foreground selection:bg-primary/20"
+    >
 
       {/* ── Landing splash screen — overlays everything until dismissed ── */}
       {showLanding && (
@@ -138,7 +149,7 @@ const App: React.FC = () => {
       {/* ══════════════════════════════════════════════════════════
           MAIN WORKSPACE BODY (LEFT FIXED, RIGHT SCROLLABLE)
       ══════════════════════════════════════════════════════════ */}
-      <div className="flex flex-1 w-full h-[calc(100vh-56px)] overflow-hidden relative z-10">
+      <div className="flex flex-1 w-full min-h-0 overflow-hidden relative z-10">
         {/* ── LEFT EDITOR PANEL (STRICTLY FIXED, NEVER MOVES) ───── */}
         {view === "editor" && (
           <aside
@@ -235,7 +246,7 @@ const App: React.FC = () => {
                     <CustomSurface onAdd={handleAddCustomSurface} />
                   </div>
                 </div>
-                <LivePreviewGrid elements={elements} surfaces={filteredSurfaces} />
+                <LivePreviewGrid elements={debouncedElements} surfaces={filteredSurfaces} />
               </motion.div>
             )}
 
@@ -265,7 +276,7 @@ const App: React.FC = () => {
                     />
                   </div>
                 </div>
-                <LivePreviewGrid elements={elements} surfaces={filteredSurfaces} />
+                <LivePreviewGrid elements={debouncedElements} surfaces={filteredSurfaces} />
               </motion.div>
             )}
 
@@ -286,8 +297,8 @@ const App: React.FC = () => {
                     Analyze raw content overflow versus engine-resolved layout geometries.
                   </p>
                 </div>
-                <CompareDemo elements={elements} />
-                <EngineInspector elements={elements} />
+                <CompareDemo elements={debouncedElements} />
+                <EngineInspector elements={debouncedElements} />
               </motion.div>
             )}
           </AnimatePresence>

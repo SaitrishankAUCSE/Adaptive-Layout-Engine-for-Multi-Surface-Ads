@@ -1,4 +1,7 @@
-/* ── Global scrollbar hide ─────────────────────────────────────────── */
+/* ── Global scrollbar hide & default 75% screen ratio ────────────────── */
+html {
+  zoom: 0.75;
+}
 * {
   scrollbar-width: none;   /* Firefox */
 }

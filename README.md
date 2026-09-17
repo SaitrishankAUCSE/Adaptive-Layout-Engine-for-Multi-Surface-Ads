@@ -83,6 +83,9 @@ This is **not an image resizer or CSS media query hack**. The engine mathematica
 - Deterministic hiding of lower-priority elements when surface area is constrained.
 - **Multi-Format Export Engine**: One-click download of all 13 layouts or customized selections as a unified ZIP archive containing 1:1 pixel PNGs, standalone IAB-compliant HTML5 banners, and the layout JSON manifest.
 - **Enterprise AdTech Workspace**: Professional views including **Creative Studio**, **Placement Matrix**, and **Comparison Lab**.
+- **Interactive Custom Surface Studio**: Create arbitrary dimensions on the fly or pick from 6 curated industry presets (Amazon Sponsored Product, Pinterest Pin, Medium Rectangle, Wide Skyscraper, Half Banner, Twitch Video Banner) with real-time aspect ratio classification and custom deletion.
+- **State & View Persistence**: Seamless browser refresh with URL hash synchronization (`#editor`, `#surfaces`, `#demo`) and session memory—retaining your active workspace and avoiding landing animation repeats.
+- **Flawless Multi-Device Architecture**: Fully responsive desktop and mobile layouts, including a precision slide-over creative studio drawer with zero clipping and streamlined single-scroll ergonomics.
 
 ---
 
@@ -224,10 +227,10 @@ src/
 │   ├── ComparisonAIWordEnhancer.tsx # Comparison Lab sentence condenser tool (Title, Banner, CTA)
 │   ├── DownloadModal.tsx        # Multi-format ZIP export modal (HTML5, 1:1 PNG, JSON AST)
 │   ├── SurfacePreview.tsx       # Surface wrapper
-│   ├── CustomSurface.tsx        # Dynamic custom dimension popover (e.g. 500x150)
+│   ├── CustomSurface.tsx        # Responsive custom surface modal (6 industry presets, custom naming, real-time classification)
 │   ├── CustomSurfaceForm.tsx    # Canonical form export
 │   ├── LayoutDecisions.tsx      # Transparent decision breakdown
-│   ├── LivePreviewGrid.tsx      # Responsive multi-surface grid & modal
+│   ├── LivePreviewGrid.tsx      # Responsive multi-surface grid with custom format badges & deletion support
 │   └── FileUploadField.tsx      # Dual drag-and-drop & URL field
 ├── engine/
 │   ├── layoutEngine.ts          # Pure orchestrator function

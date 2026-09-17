@@ -265,6 +265,7 @@ const App: React.FC = () => {
                     <CustomSurface onAdd={handleAddCustomSurface} />
                   </div>
                 </div>
+                <AutoEnhanceBanner elements={debouncedElements} surfaces={filteredSurfaces} onChange={setElements} />
                 <LivePreviewGrid elements={debouncedElements} surfaces={filteredSurfaces} />
               </motion.div>
             )}

@@ -162,8 +162,18 @@ export function shortenCta(cta: string, maxChars = 20): string {
   if (!original) return 'Learn More';
   if (original.length <= maxChars) return original;
 
+  // If there's a strong action keyword and target noun, prioritize punchy CTA phrase
+  const actionMatch = original.match(/\b(start|claim|get|try|join|explore|shop|buy|order|discover|book|unlock)\b/i);
+  const targetMatch = original.match(/\b(trial|demo|discount|offer|deal|access|quote|membership|app|service|now|today)\b/i);
+  if (actionMatch && targetMatch && targetMatch[1].toLowerCase() !== actionMatch[1].toLowerCase()) {
+    const candidate = capitalizeFirst(`${actionMatch[1]} ${targetMatch[1]}`);
+    if (candidate.length <= maxChars) {
+      return candidate;
+    }
+  }
+
   let cleaned = original
-    .replace(/\b(your|now|today|our|enterprise|cloud|database|14-day|30-day)\b/gi, '')
+    .replace(/\b(click here to|click right now to|click to|click here|click|right now|your|now|today|our|enterprise|cloud|database|14-day|30-day|free)\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -171,7 +181,7 @@ export function shortenCta(cta: string, maxChars = 20): string {
     cleaned = truncateAtWordBoundary(cleaned, maxChars);
   }
 
-  return cleaned || original.slice(0, maxChars);
+  return capitalizeFirst(cleaned) || original.slice(0, maxChars);
 }
 
 /**

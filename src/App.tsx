@@ -252,7 +252,7 @@ const App: React.FC = () => {
         )}
         <div
           className={cn(
-            "lg:hidden fixed inset-y-14 left-0 w-[340px] max-w-[88vw] z-50 bg-[#0a0a0f] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
+            "lg:hidden fixed top-14 bottom-0 left-0 w-[340px] max-w-[88vw] z-50 bg-[#0a0a0f] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
             mobileDrawerOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
           )}
         >
@@ -274,7 +274,7 @@ const App: React.FC = () => {
               Done
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto pb-24">
             {view === "editor" && <AdEditor elements={elements} onChange={setElements} />}
             {view === "surfaces" && (
               <div className="p-4">

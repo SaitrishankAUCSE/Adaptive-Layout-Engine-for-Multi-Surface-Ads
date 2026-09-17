@@ -339,10 +339,10 @@ const App: React.FC = () => {
               Done
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto pb-24">
+          <div className="flex-1 overflow-hidden flex flex-col min-h-0">
             {view === "editor" && <AdEditor elements={elements} onChange={setElements} />}
             {view === "surfaces" && (
-              <div className="p-4">
+              <div className="flex-1 overflow-y-auto p-4">
                 <SurfaceTogglePanel
                   surfaces={surfacesList}
                   activeIds={activeSurfaces}

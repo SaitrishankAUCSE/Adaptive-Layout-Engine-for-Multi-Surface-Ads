@@ -94,8 +94,8 @@ flowchart TD
 
 1. **Prune by Area & Priority**: Assesses surface capacity ($\text{area} = \text{width} \times \text{height}$). Identifies whether lower-priority elements can be accommodated.
 2. **Classify Surface Geometry**: Determines whether the surface is `WIDE`, `SQUARE`, or `TALL` using aspect ratios.
-3. **Template Composition**: Applies composition patterns (horizontal banner strip, balanced centered stack, or vertical story stack).
-4. **Collision & Constraint Resolution**: Adjusts font sizes and bounding boxes, clamping elements strictly inside surface bounds.
+3. **Template Composition & Scoring**: Evaluates *all* layout templates against the surface and calculates a fitness score for each. The engine rewards high surface area utilization while heavily penalizing hidden or shrunk elements. The highest-scoring layout is selected dynamically.
+4. **Canvas-Based Typography & Collision Resolution**: Utilizes the DOM Canvas API (`measureText`) to compute exact pixel widths of strings, ensuring 100% accurate line wrapping and bounding box constraints before clamping elements inside surface bounds.
 
 ---
 
@@ -143,11 +143,11 @@ Every ad asset has an explicit priority:
 
 ## 7. Why Rule-Based Heuristics Were Chosen
 
-Instead of a heavy mathematical constraint solver for the initial engine, rule-based heuristics were chosen for:
+Instead of a heavy mathematical constraint solver for the initial engine, rule-based heuristics paired with dynamic scoring were chosen for:
 
 1. **Deterministic Reproducibility**: Given the same inputs, the engine produces the exact same layout across all browsers and Node test runners.
-2. **Explainability & Transparency**: The engine returns explicit `decisions: string[]` explaining why an element was shrunk, hidden, or wrapped (visible in the UI under "Layout Decisions").
-3. **Sub-Millisecond Latency**: Executes in $< 1\text{ ms}$, enabling instant live preview as the user types without debounce delays.
+2. **Explainability & Transparency**: The engine returns explicit `decisions: string[]` explaining exactly *why* a template won the scoring phase, or why an element was shrunk, hidden, or wrapped (visible in the UI under "Layout AST").
+3. **O(1) Memoized Performance**: A built-in caching layer hashes the input elements and surface dimensions, allowing the engine to instantly return ASTs for unchanged surfaces. This guarantees buttery smooth 120fps UI updates even with dozens of surfaces rendering simultaneously.
 4. **Decoupled Architecture**: Modular interfaces (`types.ts`) allow dropping in a Cassowary linear constraint solver in future iterations without altering UI code.
 
 ---

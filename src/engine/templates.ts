@@ -252,7 +252,7 @@ export function centeredStackTemplate(
   }
   positioned.push(
     place(logoEl, {
-      x: PAD,
+      x: Math.round(PAD + (iw - logoW) / 2),
       y: cursor,
       w: logoW,
       h: logoH,
@@ -274,6 +274,7 @@ export function centeredStackTemplate(
       w: iw,
       h: hlH,
       fontSize: hlFontSize,
+      textAlign: "center",
       surface,
       reason: hlFontSize < 28 ? "shrunk" : "fit",
     })
@@ -295,6 +296,7 @@ export function centeredStackTemplate(
       w: iw,
       h: stH,
       fontSize: stFontSize,
+      textAlign: "center",
       surface,
       forceHide: !stFits,
       reason: !stFits ? "hidden" : "shrunk",
@@ -419,7 +421,7 @@ export function verticalStackTemplate(
   }
   positioned.push(
     place(logoEl, {
-      x: PAD,
+      x: Math.round(PAD + (iw - logoW) / 2),
       y: cursor,
       w: logoW,
       h: logoH,
@@ -441,6 +443,7 @@ export function verticalStackTemplate(
       w: iw,
       h: hlH,
       fontSize: hlFontSize,
+      textAlign: "center",
       surface,
       reason: "fit",
     })
@@ -462,6 +465,7 @@ export function verticalStackTemplate(
       w: iw,
       h: stH,
       fontSize: stFontSize,
+      textAlign: "center",
       surface,
       forceHide: !stFits,
       reason: !stFits ? "hidden" : "fit",
@@ -511,6 +515,7 @@ interface PlaceOpts {
   h: number;
   surface: Surface;
   fontSize?: number;
+  textAlign?: "left" | "center" | "right";
   imageFit?: "cover" | "contain";
   borderRadius?: number;
   forceHide?: boolean;
@@ -533,6 +538,7 @@ function place(
     width: isVisible ? Math.max(0, opts.w) : 0,
     height: isVisible ? Math.max(0, opts.h) : 0,
     fontSize: opts.fontSize,
+    textAlign: opts.textAlign,
     imageFit: opts.imageFit,
     borderRadius: opts.borderRadius,
     focalPoint: el?.focalPoint,

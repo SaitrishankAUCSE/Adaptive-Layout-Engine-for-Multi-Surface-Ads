@@ -6,11 +6,12 @@ import { SURFACES } from "./data/surfaces";
 import { LivePreviewGrid } from "./components/LivePreviewGrid";
 import { SurfaceTabs, type FilterShape } from "./components/SurfaceTabs";
 import { SurfaceTogglePanel } from "./components/SurfaceTogglePanel";
-import { CompareDemo } from "./components/CompareDemo";
+import AdPreview from "./components/AdPreview";
 import { EngineInspector } from "./components/EngineInspector";
 import { classifySurface } from "./engine/classify";
 import AdEditor from "./components/AdEditor";
 import { LandingScreen } from "./components/LandingScreen";
+import { CustomSurface } from "./components/CustomSurface";
 
 import {
   LayoutTemplate,
@@ -47,8 +48,6 @@ const AnysizeLogo = ({ size = 14 }: { size?: number }) => (
     <rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" />
   </svg>
 );
-
-import { CustomSurface } from "./components/CustomSurface";
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>("editor");
@@ -304,10 +303,10 @@ const App: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
-                      Heuristic Resolution Comparison
+                      Engine Output & Inspector
                     </h1>
                     <p className="text-muted-foreground text-xs mt-0.5">
-                      Analyze raw content overflow versus engine-resolved layout geometries.
+                      Analyze the engine-resolved layout geometries and AST.
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -325,7 +324,22 @@ const App: React.FC = () => {
                     </select>
                   </div>
                 </div>
-                <CompareDemo elements={debouncedElements} surface={SURFACES.find(s => s.id === demoSurfaceId) || SURFACES[0]} />
+                
+                <div className="flex flex-col items-center justify-center p-8 border border-white/10 rounded-xl bg-black/40 backdrop-blur-xl shadow-2xl relative">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(240,241,199,0.05)_1px,transparent_0)] [background-size:16px_16px] pointer-events-none" />
+                  <div className="relative z-10 shrink-0 shadow-2xl border border-primary/30 rounded-lg overflow-hidden bg-black/80">
+                    <AdPreview 
+                      elements={debouncedElements} 
+                      surface={SURFACES.find(s => s.id === demoSurfaceId) || SURFACES[0]} 
+                      maxDisplayWidth={800} 
+                      maxDisplayHeight={400} 
+                    />
+                    <div className="absolute top-2 right-2 px-2 py-0.5 bg-primary/90 text-primary-foreground text-[9px] font-bold rounded-sm uppercase tracking-wider shadow-sm z-50">
+                      Engine Output
+                    </div>
+                  </div>
+                </div>
+
                 <EngineInspector elements={debouncedElements} surface={SURFACES.find(s => s.id === demoSurfaceId) || SURFACES[0]} />
               </motion.div>
             )}

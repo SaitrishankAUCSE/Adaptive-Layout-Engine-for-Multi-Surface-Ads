@@ -84,10 +84,10 @@ const AdElement: React.FC<Props> = ({ el }) => {
             WebkitLineClamp: 3,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
-            textShadow: "0 1px 4px rgba(0,0,0,0.5)",
             letterSpacing: "-0.02em",
             overflowWrap: "anywhere",
             wordBreak: "break-word",
+            textAlign: el.textAlign || "left",
           }}
         >
           {el.content}
@@ -111,6 +111,7 @@ const AdElement: React.FC<Props> = ({ el }) => {
             overflow: "hidden",
             overflowWrap: "anywhere",
             wordBreak: "break-word",
+            textAlign: el.textAlign || "left",
           }}
         >
           {el.content}

@@ -61,6 +61,7 @@ export interface PositionedElement {
   width: number;
   height: number;
   fontSize?: number;     // only meaningful for text elements
+  textAlign?: "left" | "center" | "right";
   imageFit?: "cover" | "contain";
   borderRadius?: number;
   focalPoint?: FocalPoint;

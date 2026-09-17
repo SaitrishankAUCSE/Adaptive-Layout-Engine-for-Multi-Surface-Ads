@@ -61,6 +61,7 @@ const App: React.FC = () => {
     SURFACES.map((s) => s.id)
   );
   const [showLanding, setShowLanding] = useState(true);
+  const [demoSurfaceId, setDemoSurfaceId] = useState<string>(SURFACES[0].id);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -289,16 +290,32 @@ const App: React.FC = () => {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="space-y-10 pb-20"
               >
-                <div>
-                  <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
-                    Heuristic Resolution Comparison
-                  </h1>
-                  <p className="text-muted-foreground text-xs mt-0.5">
-                    Analyze raw content overflow versus engine-resolved layout geometries.
-                  </p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
+                      Heuristic Resolution Comparison
+                    </h1>
+                    <p className="text-muted-foreground text-xs mt-0.5">
+                      Analyze raw content overflow versus engine-resolved layout geometries.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-muted-foreground font-mono">Surface:</span>
+                    <select
+                      value={demoSurfaceId}
+                      onChange={(e) => setDemoSurfaceId(e.target.value)}
+                      className="bg-black/60 border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-[#ebebeb] focus:outline-none focus:ring-1 focus:ring-primary/50 font-mono cursor-pointer"
+                    >
+                      {SURFACES.map((s) => (
+                        <option key={s.id} value={s.id} className="bg-[#0a0a0a] text-white">
+                          {s.name} ({s.width}×{s.height})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <CompareDemo elements={debouncedElements} />
-                <EngineInspector elements={debouncedElements} />
+                <CompareDemo elements={debouncedElements} surface={SURFACES.find(s => s.id === demoSurfaceId) || SURFACES[0]} />
+                <EngineInspector elements={debouncedElements} surface={SURFACES.find(s => s.id === demoSurfaceId) || SURFACES[0]} />
               </motion.div>
             )}
           </AnimatePresence>

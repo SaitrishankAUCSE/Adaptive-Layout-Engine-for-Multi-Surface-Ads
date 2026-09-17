@@ -3,9 +3,8 @@ import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import json from "react-syntax-highlighter/dist/esm/languages/hljs/json";
 import bash from "react-syntax-highlighter/dist/esm/languages/hljs/bash";
 import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
-import type { AdElement } from "../engine/types";
+import type { AdElement, Surface } from "../engine/types";
 import { layoutEngine } from "../engine/layoutEngine";
-import { SURFACES } from "../data/surfaces";
 import { Copy, Check, Terminal, Server, Code2, Play } from "lucide-react";
 
 SyntaxHighlighter.registerLanguage("json", json);
@@ -13,10 +12,10 @@ SyntaxHighlighter.registerLanguage("bash", bash);
 
 interface Props {
   elements: AdElement[];
+  surface: Surface;
 }
 
-export const EngineInspector: React.FC<Props> = ({ elements }) => {
-  const [selectedSurfaceId, setSelectedSurfaceId] = useState<string>(SURFACES[0].id);
+export const EngineInspector: React.FC<Props> = ({ elements, surface }) => {
   const [activeTab, setActiveTab] = useState<"surface" | "api">("surface");
   const [apiResponse, setApiResponse] = useState<any>(null);
   const [apiLoading, setApiLoading] = useState(false);
@@ -24,8 +23,7 @@ export const EngineInspector: React.FC<Props> = ({ elements }) => {
   const [copiedJson, setCopiedJson] = useState(false);
   const [copiedCurl, setCopiedCurl] = useState(false);
 
-  const selectedSurface = SURFACES.find((s) => s.id === selectedSurfaceId) || SURFACES[0];
-  const localResult = layoutEngine(elements, selectedSurface);
+  const localResult = layoutEngine(elements, surface);
 
   const curlCommand = `curl -X POST http://localhost:5173/api/adapt \\
   -H "Content-Type: application/json" \\
@@ -38,7 +36,7 @@ export const EngineInspector: React.FC<Props> = ({ elements }) => {
       const res = await fetch("/api/adapt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ elements, surfaces: [selectedSurface] }),
+        body: JSON.stringify({ elements, surfaces: [surface] }),
       });
       const data = await res.json();
       setApiResponse(data);
@@ -91,19 +89,11 @@ export const EngineInspector: React.FC<Props> = ({ elements }) => {
         </div>
 
         {activeTab === "surface" && (
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground font-mono">Surface:</span>
-            <select
-              value={selectedSurfaceId}
-              onChange={(e) => setSelectedSurfaceId(e.target.value)}
-              className="bg-black/60 border border-white/10 rounded-lg px-2.5 py-1 text-[11px] text-[#ebebeb] focus:outline-none focus:ring-1 focus:ring-primary/50 font-mono cursor-pointer"
-            >
-              {SURFACES.map((s) => (
-                <option key={s.id} value={s.id} className="bg-[#0a0a0a] text-white">
-                  {s.name} ({s.width}×{s.height})
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-muted-foreground">Surface:</span>
+              <span className="text-[#f2f0ea] font-medium">{surface.name} ({surface.width}×{surface.height})</span>
+            </div>
             <button
               onClick={handleCopyJson}
               title="Copy layout JSON"

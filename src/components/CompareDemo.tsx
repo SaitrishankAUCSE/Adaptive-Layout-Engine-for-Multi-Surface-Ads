@@ -1,21 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { MoveHorizontal } from "lucide-react";
-import type { AdElement } from "../engine/types";
+import type { AdElement, Surface } from "../engine/types";
 import AdPreview from "./AdPreview";
 
 interface Props {
   elements: AdElement[];
+  surface: Surface;
 }
 
-// A 728×90 Leaderboard surface — the most common overflow showcase
-const DEMO_SURFACE = {
-  id: "demo-leaderboard",
-  name: "Leaderboard",
-  width: 728,
-  height: 90,
-};
-
-export const CompareDemo: React.FC<Props> = ({ elements }) => {
+export const CompareDemo: React.FC<Props> = ({ elements, surface }) => {
   const [position, setPosition] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false); // ref instead of state — no re-render on drag flag change
@@ -72,7 +65,10 @@ export const CompareDemo: React.FC<Props> = ({ elements }) => {
           style={{ clipPath: `polygon(0 0, ${position}% 0, ${position}% 100%, 0 100%)` }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(239,68,68,0.06)_1px,transparent_0)] [background-size:16px_16px] pointer-events-none" />
-          <div className="relative z-10 w-[728px] h-[90px] bg-black/80 border border-destructive/40 mx-auto overflow-visible flex items-center px-4 shrink-0 rounded-lg">
+          <div 
+            className="relative z-10 bg-black/80 border border-destructive/40 mx-auto overflow-visible flex items-center px-4 shrink-0 rounded-lg"
+            style={{ width: surface.width, height: surface.height }}
+          >
             <span className="text-4xl font-bold whitespace-nowrap text-foreground">
               {headline || "Your headline here"}
             </span>
@@ -89,7 +85,7 @@ export const CompareDemo: React.FC<Props> = ({ elements }) => {
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(240,241,199,0.05)_1px,transparent_0)] [background-size:16px_16px] pointer-events-none" />
           <div className="relative z-10 shrink-0 shadow-2xl border border-primary/30 rounded-lg overflow-hidden bg-black/80">
-            <AdPreview elements={elements} surface={DEMO_SURFACE} maxDisplayWidth={728} />
+            <AdPreview elements={elements} surface={surface} maxDisplayWidth={800} />
             <div className="absolute top-2 right-2 px-2 py-0.5 bg-primary/90 text-primary-foreground text-[9px] font-bold rounded-sm uppercase tracking-wider shadow-sm z-50">
               Engine
             </div>

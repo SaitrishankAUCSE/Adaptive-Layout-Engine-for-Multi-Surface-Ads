@@ -10,22 +10,39 @@
 
 > A pure TypeScript layout engine that takes a single structured advertisement and autonomously computes optimal, surface-specific layouts across diverse aspect ratios and dimensions without relying on DOM measurements or external constraints.
 
+**Live Production Deployment:** [https://anysize-ads.vercel.app](https://anysize-ads.vercel.app)
+
 ---
 
 ## Table of Contents
 
-1. [What the Project Does](#1-what-the-project-does)
-2. [The Problem It Solves](#2-the-problem-it-solves)
-3. [How the Layout Engine Works](#3-how-the-layout-engine-works)
-4. [How Surfaces Are Classified](#4-how-surfaces-are-classified)
-5. [How Priority-Based Adaptation Works](#5-how-priority-based-adaptation-works)
-6. [How Images Are Handled](#6-how-images-are-handled)
-7. [Why Rule-Based Heuristics Were Chosen](#7-why-rule-based-heuristics-were-chosen)
-8. [AI-Assisted Copy Optimization ("✨ Enhance to Fit")](#8-ai-assisted-copy-optimization--enhance-to-fit)
-9. [Architecture](#9-architecture)
-10. [Testing & Quality Verification](#10-testing--quality-verification)
-11. [How to Run Locally](#11-how-to-run-locally)
-12. [Future Improvements](#12-future-improvements)
+1. [Live Demo & Brand Identity](#1-live-demo--brand-identity)
+2. [What the Project Does](#2-what-the-project-does)
+3. [The Problem It Solves](#3-the-problem-it-solves)
+4. [How the Layout Engine Works](#4-how-the-layout-engine-works)
+5. [How Surfaces Are Classified](#5-how-surfaces-are-classified)
+6. [How Priority-Based Adaptation Works](#6-how-priority-based-adaptation-works)
+7. [How Images Are Handled](#7-how-images-are-handled)
+8. [Why Rule-Based Heuristics Were Chosen](#8-why-rule-based-heuristics-were-chosen)
+9. [AI-Assisted Copy Optimization ("✨ Enhance to Fit")](#9-ai-assisted-copy-optimization--enhance-to-fit)
+10. [Architecture](#10-architecture)
+11. [Testing & Quality Verification](#11-testing--quality-verification)
+12. [How to Run Locally](#12-how-to-run-locally)
+13. [Future Improvements](#13-future-improvements)
+
+---
+
+## 1. Live Demo & Brand Identity
+
+- **Production App**: [https://anysize-ads.vercel.app](https://anysize-ads.vercel.app)
+- **Visual Design Signature**: Dark obsidian canvas (`#08090c`) with luminous emerald neon (`#10b981`) and champagne cream (`#f0f1c7`) accents.
+- **Brand Emblem**: Adaptive 3-Surface Geometry representing the three core ad formats — Top Wide Banner, Bottom Square, and Right Tall Story.
+- **Multi-Platform Icon Suite**:
+  - `favicon.ico`: Multi-resolution (16x16, 32x32, 48x48)
+  - `favicon.svg`: Scalable glowing vector
+  - `og-image-square.jpg`: Full-bleed dark square optimized for WhatsApp and instant messaging previews (zero white margins, zero blurry micro-text)
+  - `og-image.jpg`: 1200×630 OpenGraph card for Twitter/X, LinkedIn, and Facebook
+
 
 ---
 

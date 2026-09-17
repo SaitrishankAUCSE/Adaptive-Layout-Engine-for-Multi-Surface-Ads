@@ -16,7 +16,7 @@ import {
 } from "./scale";
 
 /**
- * HORIZONTAL template — for WIDE surfaces (banners).
+ * HORIZONTAL template — for WIDE surfaces (banners, billboards, linkedin banners).
  *
  * Layout:
  * ┌───────┬────────────────────────────┬────────┐
@@ -32,15 +32,15 @@ export function horizontalTemplate(
   const positioned: PositionedElement[] = [];
   const decisions: string[] = ["Horizontal layout (aspect ratio >= 2.2)"];
 
-  // Slot proportions
-  const imageW = Math.round(ih * 1.0); // square-ish image on left
-  const ctaW = Math.round(Math.max(iw * 0.18, 60));
-  const textW = iw - imageW - ctaW - PAD * 2;
-
   const byType = byTypeMap(elements);
+  const imageEl = byType.get("image");
+
+  // Slot proportions scaled to avoid negative widths on compact banners
+  const imageW = imageEl ? Math.min(Math.round(ih * 1.0), Math.max(16, Math.round(iw * 0.22))) : 0;
+  const ctaW = Math.min(Math.round(iw * 0.30), Math.max(Math.round(iw * 0.16), 40));
+  const textW = Math.max(24, iw - (imageEl ? imageW + PAD : 0) - ctaW - PAD);
 
   // ── Image (left slot) ──────────────────────────────────────────────
-  const imageEl = byType.get("image");
   if (imageEl) {
     decisions.push("Image cropped with cover fit in left slot");
   }
@@ -60,7 +60,8 @@ export function horizontalTemplate(
 
   // ── Logo ────────────────────────────────────────────────────────────
   const logoEl = byType.get("logo");
-  const logoH = logoEl ? Math.round(ih * 0.35) : 0;
+  const logoH = logoEl ? Math.min(Math.round(ih * 0.32), 36) : 0;
+  const logoW = logoEl ? Math.round(logoH * (logoEl.aspectRatio ?? 3)) : 0;
   if (logoEl) {
     decisions.push("Logo positioned at top of text block");
   }
@@ -68,7 +69,7 @@ export function horizontalTemplate(
     place(logoEl, {
       x: textX,
       y: PAD,
-      w: logoEl ? Math.round(logoH * (logoEl.aspectRatio ?? 3)) : 0,
+      w: logoW,
       h: logoH,
       surface,
       imageFit: "contain",
@@ -79,20 +80,23 @@ export function horizontalTemplate(
   // ── Headline ────────────────────────────────────────────────────────
   const hlEl = byType.get("headline");
   const hlFontSize = headlineFontSize(surface);
-  const isLongHeadline = (hlEl?.content.length ?? 0) > 40;
-  const hlLines = isLongHeadline ? 2 : 1;
-  const hlH = Math.round(hlFontSize * 1.25 * hlLines);
+  const hlText = hlEl?.content ?? "";
+  const isLongHeadline = hlText.length > 40;
+  const charsPerLine = Math.max(12, Math.floor(textW / (hlFontSize * 0.58)));
+  const hlLines = Math.min(2, Math.max(1, Math.ceil(hlText.length / charsPerLine)));
+  const hlH = Math.round(hlFontSize * 1.2 * hlLines);
+
   if (hlEl) {
-    if (isLongHeadline) {
-      decisions.push(`Headline multi-line wrapped (scaled to ${hlFontSize}px)`);
+    if (hlLines > 1) {
+      decisions.push(`Headline multi-line wrapped (${hlFontSize}px)`);
     } else {
-      decisions.push(`Headline reduced to ${hlFontSize}px`);
+      decisions.push(`Headline scaled to ${hlFontSize}px`);
     }
   }
   positioned.push(
     place(hlEl, {
       x: textX,
-      y: PAD + logoH,
+      y: PAD + logoH + (logoH > 0 ? 3 : 0),
       w: textW,
       h: hlH,
       fontSize: hlFontSize,
@@ -104,15 +108,19 @@ export function horizontalTemplate(
   // ── Subtext ─────────────────────────────────────────────────────────
   const stEl = byType.get("subtext");
   const stFontSize = subtextFontSize(surface);
-  const stH = Math.round(stFontSize * 1.3);
-  const stY = PAD + logoH + hlH + 2;
-  // Subtext only fits if it doesn't collide vertically and headline didn't take up space
-  const stFits = !isLongHeadline && stY + stH <= surface.height - PAD;
+  const stText = stEl?.content ?? "";
+  const stCharsPerLine = Math.max(14, Math.floor(textW / (stFontSize * 0.52)));
+  const stLines = Math.min(2, Math.max(1, Math.ceil(stText.length / stCharsPerLine)));
+  const stH = Math.round(stFontSize * 1.3 * stLines);
+  const stY = PAD + logoH + (logoH > 0 ? 3 : 0) + hlH + 3;
+
+  // In banners, description fits only if there's vertical clearance without colliding
+  const stFits = !isLongHeadline && stY + stH <= surface.height - PAD && surface.height >= 85;
   if (stEl) {
     if (stFits) {
-      decisions.push(`Description fitted at ${stFontSize}px`);
+      decisions.push(`Description fitted below headline (${stFontSize}px)`);
     } else {
-      decisions.push("Description hidden (space constrained by headline/height)");
+      decisions.push("Description hidden (space constrained by banner height)");
     }
   }
   positioned.push(
@@ -130,8 +138,11 @@ export function horizontalTemplate(
 
   // ── CTA (right slot) ────────────────────────────────────────────────
   const ctaEl = byType.get("cta");
-  const ctaH = Math.min(Math.round(ih * 0.65), 48);
-  const ctaY = Math.min(surface.height - PAD - ctaH, Math.max(PAD, PAD + Math.round((ih - ctaH) / 2)));
+  const ctaH = Math.min(Math.round(ih * 0.55), 44);
+  const ctaY = Math.min(
+    surface.height - PAD - ctaH,
+    Math.max(PAD, PAD + Math.round((ih - ctaH) / 2))
+  );
   if (ctaEl) {
     decisions.push("CTA preserved (priority 1)");
   }
@@ -152,14 +163,14 @@ export function horizontalTemplate(
 }
 
 /**
- * CENTERED_STACK template — for SQUARE surfaces (MREC, Square).
+ * CENTERED_STACK template — for SQUARE & BALANCED surfaces (MREC, Square, Feeds).
  *
  * Layout (top to bottom):
- *   [image — top ~42%]
+ *   [image — top ~35-42%]
  *   [logo row]
  *   [headline]
  *   [subtext]
- *   [CTA button — centered]
+ *   [CTA button — centered at base]
  */
 export function centeredStackTemplate(
   elements: AdElement[],
@@ -168,14 +179,55 @@ export function centeredStackTemplate(
   const iw = innerWidth(surface);
   const ih = innerHeight(surface);
   const positioned: PositionedElement[] = [];
-  const decisions: string[] = ["Balanced stacked layout (aspect ratio between 0.75 and 2.2)"];
+  const decisions: string[] = ["Balanced stacked layout (aspect ratio 0.75 - 2.2)"];
   const byType = byTypeMap(elements);
+
+  const ctaFSize = ctaFontSize(surface);
+  const ctaH = Math.min(Math.round(ctaFSize * 2.1), 44);
+  const logoEl = byType.get("logo");
+  const logoH = logoEl ? Math.round(logoFontSize(surface) * 1.3) : 0;
+  const hlEl = byType.get("headline");
+  const hlFontSize = headlineFontSize(surface);
+
+  const hlText = hlEl?.content ?? "";
+  const charsPerLine = Math.max(10, Math.floor(iw / (hlFontSize * 0.58)));
+  const hlLines = Math.min(2, Math.max(1, Math.ceil(hlText.length / charsPerLine)));
+  const hlH = Math.round(hlFontSize * 1.25 * hlLines);
+
+  const stEl = byType.get("subtext");
+  const stFontSize = subtextFontSize(surface);
+  const stText = stEl?.content ?? "";
+  const stCharsPerLine = Math.max(12, Math.floor(iw / (stFontSize * 0.52)));
+  const stLines = Math.min(2, Math.max(1, Math.ceil(stText.length / stCharsPerLine)));
+  const stH = Math.round(stFontSize * 1.35 * stLines);
+
+  const gap = Math.max(3, Math.round(PAD * 0.5));
+  const textAndCtaHeight = logoH + hlH + stH + ctaH + gap * 5;
+  const availForImage = surface.height - PAD * 2 - textAndCtaHeight;
+
+  let imageH: number;
+  let stFits = true;
+
+  if (availForImage >= 60) {
+    // Both image and subtext fit cleanly
+    imageH = Math.min(Math.round(ih * 0.38), availForImage);
+  } else {
+    // Tight height (like MREC 300x250 or Square 300x300 with long content)
+    const withoutSubtext = logoH + hlH + ctaH + gap * 4;
+    const availWithoutSubtext = surface.height - PAD * 2 - withoutSubtext;
+    if (availWithoutSubtext >= 50) {
+      stFits = false;
+      imageH = Math.min(Math.round(ih * 0.35), availWithoutSubtext);
+    } else {
+      stFits = false;
+      imageH = Math.max(40, availWithoutSubtext);
+    }
+  }
 
   let cursor = PAD;
 
   // ── Image ────────────────────────────────────────────────────────────
   const imageEl = byType.get("image");
-  const imageH = Math.min(Math.round(ih * 0.40), Math.max(40, surface.height - 180));
   if (imageEl) {
     decisions.push("Image allocated top section with cover fit");
   }
@@ -187,15 +239,13 @@ export function centeredStackTemplate(
       h: imageH,
       surface,
       imageFit: "cover",
-      borderRadius: 6,
+      borderRadius: 8,
       reason: imageEl ? "cropped" : "hidden",
     })
   );
-  if (imageEl) cursor += imageH + PAD;
+  if (imageEl) cursor += imageH + gap;
 
   // ── Logo ─────────────────────────────────────────────────────────────
-  const logoEl = byType.get("logo");
-  const logoH = Math.round(logoFontSize(surface) * 1.6);
   const logoW = logoEl ? Math.round(logoH * (logoEl.aspectRatio ?? 3)) : 0;
   if (logoEl) {
     decisions.push("Logo placed above typography");
@@ -211,14 +261,11 @@ export function centeredStackTemplate(
       reason: logoEl ? "fit" : "hidden",
     })
   );
-  if (logoEl) cursor += logoH + 4;
+  if (logoEl) cursor += logoH + gap;
 
   // ── Headline ──────────────────────────────────────────────────────────
-  const hlEl = byType.get("headline");
-  const hlFontSize = headlineFontSize(surface);
-  const hlH = Math.round(hlFontSize * 1.3 * 2); // allow 2 lines
   if (hlEl) {
-    decisions.push(`Headline scaled to ${hlFontSize}px (2-line capacity)`);
+    decisions.push(`Headline scaled to ${hlFontSize}px (${hlLines} lines)`);
   }
   positioned.push(
     place(hlEl, {
@@ -231,18 +278,12 @@ export function centeredStackTemplate(
       reason: hlFontSize < 28 ? "shrunk" : "fit",
     })
   );
-  if (hlEl) cursor += hlH + 4;
+  if (hlEl) cursor += hlH + gap;
 
   // ── Subtext ───────────────────────────────────────────────────────────
-  const ctaFSize = ctaFontSize(surface);
-  const ctaH = Math.min(Math.round(ctaFSize * 2.2), 46);
-  const stEl = byType.get("subtext");
-  const stFontSize = subtextFontSize(surface);
-  const stH = Math.round(stFontSize * 1.3);
-  const stFits = cursor + stH + ctaH + PAD <= surface.height - PAD;
   if (stEl) {
     if (stFits) {
-      decisions.push("Description accommodated below headline");
+      decisions.push(`Description fitted below headline (${stFontSize}px)`);
     } else {
       decisions.push("Description hidden to preserve CTA clearance");
     }
@@ -259,13 +300,14 @@ export function centeredStackTemplate(
       reason: !stFits ? "hidden" : "shrunk",
     })
   );
-  if (stEl && stFits) cursor += stH + 6;
+  if (stEl && stFits) cursor += stH + gap;
 
   // ── CTA ───────────────────────────────────────────────────────────────
   const ctaEl = byType.get("cta");
   const ctaW = Math.min(iw, Math.round(iw * 0.75));
   const ctaX = PAD + Math.round((iw - ctaW) / 2);
-  const ctaY = Math.min(surface.height - PAD - ctaH, Math.max(PAD, cursor));
+  // Guarantee CTA is positioned at base without ever overlapping subtext
+  const ctaY = Math.min(surface.height - PAD - ctaH, Math.max(cursor + 2, surface.height - PAD - ctaH));
   if (ctaEl) {
     decisions.push("CTA centered at base with full visibility");
   }
@@ -286,14 +328,14 @@ export function centeredStackTemplate(
 }
 
 /**
- * VERTICAL_STACK template — for TALL surfaces (Story, Interstitial).
+ * VERTICAL_STACK template — for TALL surfaces (Story, Half Page, Interstitial).
  *
  * Layout (top to bottom):
- *   [large image — top ~40-48%]
+ *   [hero image — top proportional cover]
  *   [logo]
  *   [headline]
  *   [subtext]
- *   [big CTA button]
+ *   [CTA button — at base]
  */
 export function verticalStackTemplate(
   elements: AdElement[],
@@ -306,19 +348,48 @@ export function verticalStackTemplate(
   const byType = byTypeMap(elements);
 
   const ctaFSize = ctaFontSize(surface);
-  const ctaH = Math.min(Math.round(ctaFSize * 2.2), 52);
+  const ctaH = Math.min(Math.round(ctaFSize * 2.1), 50);
   const logoEl = byType.get("logo");
-  const logoH = logoEl ? Math.round(logoFontSize(surface) * 1.8) : 0;
+  const logoH = logoEl ? Math.round(logoFontSize(surface) * 1.4) : 0;
   const hlEl = byType.get("headline");
   const hlFontSize = headlineFontSize(surface);
-  const hlLines = surface.height > 600 ? 3 : 2;
-  const hlH = Math.round(hlFontSize * 1.3 * hlLines);
 
-  // Dynamically allocate image height so typography and CTA always fit inside surface
-  const reservedForContent = logoH + hlH + ctaH + PAD * 4;
-  const maxImageH = Math.max(40, surface.height - PAD * 2 - reservedForContent);
-  const desiredImageH = Math.round(ih * (surface.height > 600 ? 0.48 : 0.38));
-  const imageH = Math.min(desiredImageH, maxImageH);
+  // Line wrapping calculation based on container inner width
+  const hlText = hlEl?.content ?? "";
+  const charsPerLine = Math.max(10, Math.floor(iw / (hlFontSize * 0.58)));
+  const hlLines = Math.min(3, Math.max(1, Math.ceil(hlText.length / charsPerLine)));
+  const hlH = Math.round(hlFontSize * 1.25 * hlLines);
+
+  const stEl = byType.get("subtext");
+  const stFontSize = subtextFontSize(surface);
+  const stText = stEl?.content ?? "";
+  const stCharsPerLine = Math.max(12, Math.floor(iw / (stFontSize * 0.52)));
+  const stLines = Math.min(3, Math.max(1, Math.ceil(stText.length / stCharsPerLine)));
+  const stH = Math.round(stFontSize * 1.35 * stLines);
+
+  const gap = Math.max(4, Math.round(PAD * 0.6));
+  const textAndCtaHeight = logoH + hlH + stH + ctaH + gap * 5;
+  const availForImage = surface.height - PAD * 2 - textAndCtaHeight;
+
+  let imageH: number;
+  let stFits = true;
+
+  if (availForImage >= 75) {
+    // Tall surface (e.g. Half Page 300x600, Story 1080x1920): both image and description fit!
+    const targetImageRatio = surface.height > 800 ? 0.44 : 0.34;
+    imageH = Math.min(Math.round(ih * targetImageRatio), availForImage);
+  } else {
+    // Highly constrained tall surface: check if dropping subtext allows clean image and headline
+    const withoutSubtext = logoH + hlH + ctaH + gap * 4;
+    const availWithoutSubtext = surface.height - PAD * 2 - withoutSubtext;
+    if (availWithoutSubtext >= 55) {
+      stFits = false;
+      imageH = Math.min(Math.round(ih * 0.30), availWithoutSubtext);
+    } else {
+      stFits = false;
+      imageH = Math.max(40, availWithoutSubtext);
+    }
+  }
 
   let cursor = PAD;
 
@@ -339,7 +410,7 @@ export function verticalStackTemplate(
       reason: imageEl ? "cropped" : "hidden",
     })
   );
-  if (imageEl) cursor += imageH + PAD;
+  if (imageEl) cursor += imageH + gap;
 
   // ── Logo ──────────────────────────────────────────────────────────────
   const logoW = logoEl ? Math.round(logoH * (logoEl.aspectRatio ?? 3)) : 0;
@@ -357,7 +428,7 @@ export function verticalStackTemplate(
       reason: logoEl ? "fit" : "hidden",
     })
   );
-  if (logoEl) cursor += logoH + PAD * 0.5;
+  if (logoEl) cursor += logoH + gap;
 
   // ── Headline ──────────────────────────────────────────────────────────
   if (hlEl) {
@@ -374,18 +445,14 @@ export function verticalStackTemplate(
       reason: "fit",
     })
   );
-  if (hlEl) cursor += hlH + PAD * 0.5;
+  if (hlEl) cursor += hlH + gap;
 
   // ── Subtext ───────────────────────────────────────────────────────────
-  const stEl = byType.get("subtext");
-  const stFontSize = subtextFontSize(surface);
-  const stH = Math.round(stFontSize * 1.35 * (surface.height > 600 ? 2 : 1));
-  const stFits = cursor + stH + ctaH + PAD * 1.5 <= surface.height - PAD;
   if (stEl) {
     if (stFits) {
-      decisions.push("Full description visible with generous vertical line-height");
+      decisions.push(`Full description visible with ${stLines}-line wrap (${stFontSize}px)`);
     } else {
-      decisions.push("Description hidden to guarantee CTA visibility");
+      decisions.push("Description hidden to guarantee CTA clearance");
     }
   }
   positioned.push(
@@ -400,13 +467,13 @@ export function verticalStackTemplate(
       reason: !stFits ? "hidden" : "fit",
     })
   );
-  if (stEl && stFits) cursor += stH + PAD * 0.75;
+  if (stEl && stFits) cursor += stH + gap;
 
   // ── CTA ───────────────────────────────────────────────────────────────
   const ctaEl = byType.get("cta");
   const ctaW = iw;
-  // Pin CTA safely within surface boundaries
-  const ctaY = Math.min(surface.height - PAD - ctaH, Math.max(PAD, cursor));
+  // Pin CTA cleanly at base, guaranteed below cursor and strictly within bounds
+  const ctaY = Math.min(surface.height - PAD - ctaH, Math.max(cursor + 2, surface.height - PAD - ctaH));
   if (ctaEl) {
     decisions.push("Full-width CTA button preserved at base");
   }
@@ -428,7 +495,6 @@ export function verticalStackTemplate(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Build a Map<type, AdElement> for O(1) lookups. */
 function byTypeMap(elements: AdElement[]): Map<string, AdElement> {
   const m = new Map<string, AdElement>();
   for (const el of elements) {
@@ -451,12 +517,12 @@ interface PlaceOpts {
   reason?: AdaptationReason;
 }
 
-/** Build a PositionedElement. If `el` is undefined, produces a hidden placeholder. */
+/** Build a PositionedElement. If `el` is undefined or forceHidden, produces a hidden element. */
 function place(
   el: AdElement | undefined,
   opts: PlaceOpts
 ): PositionedElement {
-  const isVisible = !!el && !opts.forceHide;
+  const isVisible = !!el && !opts.forceHide && opts.w > 0 && opts.h > 0;
   return {
     id: el?.id ?? `__placeholder_${opts.x}_${opts.y}`,
     type: el?.type ?? "headline",
@@ -464,8 +530,8 @@ function place(
     visible: isVisible,
     x: Math.max(0, opts.x),
     y: Math.max(0, opts.y),
-    width: Math.max(0, opts.w),
-    height: Math.max(0, opts.h),
+    width: isVisible ? Math.max(0, opts.w) : 0,
+    height: isVisible ? Math.max(0, opts.h) : 0,
     fontSize: opts.fontSize,
     imageFit: opts.imageFit,
     borderRadius: opts.borderRadius,

@@ -91,9 +91,15 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
           const isDecisionsOpen = !!expandedDecisions[surface.id];
           const category = getCategoryLabel(surface.id);
           const templateLabel = getTemplateLabel(result?.template);
-          const hiddenCount = result?.hiddenCount ?? 0;
-          const totalElements = elements.length;
-          const retainedCount = Math.max(0, totalElements - hiddenCount);
+          
+          const activeElements = elements.filter((el) => el.content && el.content.trim() !== "");
+          const totalElements = activeElements.length;
+          const visibleCount = result
+            ? result.elements.filter(
+                (p) => p.visible && p.content && p.content.trim() !== "" && p.width > 0 && p.height > 0
+              ).length
+            : 0;
+          const isFullyVisible = visibleCount === totalElements;
           const decisions = result?.decisions ?? [];
 
           return (
@@ -183,15 +189,15 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
                   onClick={() => toggleDecisions(surface.id)}
                   className="flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer hover:underline"
                 >
-                  {hiddenCount === 0 ? (
+                  {isFullyVisible ? (
                     <span className="flex items-center gap-1 text-emerald-400/90 font-medium">
                       <ShieldCheck size={11} />
-                      {retainedCount}/{totalElements} visible
+                      {visibleCount}/{totalElements} visible
                     </span>
                   ) : (
                     <span className="flex items-center gap-1 text-amber-400/90 font-medium">
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                      {retainedCount}/{totalElements} visible
+                      {visibleCount}/{totalElements} visible
                     </span>
                   )}
                   {isDecisionsOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -207,7 +213,7 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
                       Layout Decisions ({surface.name} — {surface.width}×{surface.height})
                     </span>
                     <span className="text-[10px] font-mono text-muted-foreground/70">
-                      {retainedCount}/{totalElements} elements
+                      {visibleCount}/{totalElements} elements
                     </span>
                   </div>
                   <ul className="space-y-1 text-[11px] text-white/80 font-sans">
@@ -235,59 +241,80 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
       </div>
 
       {/* ── Fullscreen Preview Modal ─────────────────────────────── */}
-      {modalSurface && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-6">
-          <div className="relative max-w-5xl w-full max-h-[90vh] bg-[#0c0d0e] border border-white/15 rounded-3xl p-6 flex flex-col shadow-2xl overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
-              <div className="flex items-center gap-3">
-                <h2 className="text-base font-semibold text-white">
-                  {modalSurface.name}
-                </h2>
-                <span className="text-xs font-mono text-muted-foreground bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-full">
-                  {modalSurface.width} × {modalSurface.height} px
-                </span>
-                <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
-                  {classifySurface(modalSurface)}
-                </span>
-              </div>
-              <button
-                onClick={() => setModalSurface(null)}
-                className="p-1.5 rounded-full bg-white/5 hover:bg-white/15 text-muted-foreground hover:text-white transition-all cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
+      {modalSurface && (() => {
+        const modalResult = results[modalSurface.id];
+        const modalActive = elements.filter((el) => el.content && el.content.trim() !== "");
+        const modalTotal = modalActive.length;
+        const modalVisCount = modalResult
+          ? modalResult.elements.filter(
+              (p) => p.visible && p.content && p.content.trim() !== "" && p.width > 0 && p.height > 0
+            ).length
+          : 0;
+        const modalFullyVis = modalVisCount === modalTotal;
 
-            {/* Modal Canvas */}
-            <div className="flex-1 overflow-auto flex items-center justify-center p-6 bg-black/40 rounded-2xl my-4 min-h-[300px]">
-              <AdPreview
-                elements={elements}
-                surface={modalSurface}
-                precomputedResult={results[modalSurface.id]}
-                maxDisplayWidth={Math.min(modalSurface.width, 700)}
-              />
-            </div>
-
-            {/* Modal Footer Decisions */}
-            <div className="shrink-0 pt-3 border-t border-white/10 flex flex-col gap-1.5">
-              <div className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
-                Autonomous Engine Decisions
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {results[modalSurface.id]?.decisions.map((d, i) => (
-                  <span
-                    key={i}
-                    className="text-xs bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-white/80"
-                  >
-                    {d}
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-6">
+            <div className="relative max-w-5xl w-full max-h-[90vh] bg-[#0c0d0e] border border-white/15 rounded-3xl p-6 flex flex-col shadow-2xl overflow-hidden">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-semibold text-white">
+                    {modalSurface.name}
+                  </h2>
+                  <span className="text-xs font-mono text-muted-foreground bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-full">
+                    {modalSurface.width} × {modalSurface.height} px
                   </span>
-                ))}
+                  <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                    {classifySurface(modalSurface)}
+                  </span>
+                  <span
+                    className={`text-xs font-mono px-2.5 py-0.5 rounded-full border ${
+                      modalFullyVis
+                        ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                        : "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                    }`}
+                  >
+                    {modalVisCount}/{modalTotal} visible
+                  </span>
+                </div>
+                <button
+                  onClick={() => setModalSurface(null)}
+                  className="p-1.5 rounded-full bg-white/5 hover:bg-white/15 text-muted-foreground hover:text-white transition-all cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Modal Canvas */}
+              <div className="flex-1 overflow-auto flex items-center justify-center p-6 bg-black/40 rounded-2xl my-4 min-h-[300px]">
+                <AdPreview
+                  elements={elements}
+                  surface={modalSurface}
+                  precomputedResult={modalResult}
+                  maxDisplayWidth={Math.min(modalSurface.width, 700)}
+                />
+              </div>
+
+              {/* Modal Footer Decisions */}
+              <div className="shrink-0 pt-3 border-t border-white/10 flex flex-col gap-1.5">
+                <div className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
+                  Autonomous Engine Decisions
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {modalResult?.decisions.map((d, i) => (
+                    <span
+                      key={i}
+                      className="text-xs bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-white/80"
+                    >
+                      {d}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </>
   );
 };

@@ -24,6 +24,7 @@ import { layoutEngine } from "./engine/layoutEngine";
 import { classifySurface } from "./engine/classify";
 import type { AdElement, Surface } from "./engine/types";
 import { SAMPLE_AD } from "./data/sampleAd";
+import { SURFACES } from "./data/surfaces";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -181,6 +182,35 @@ describe("Adaptive Layout Engine — 12 Specification Test Cases", () => {
     for (const el of result.elements) {
       expect(el.width).toBeGreaterThanOrEqual(0);
       expect(el.height).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  // 13. Audit all 13 surfaces: exact visibility counting and collision-free boundaries
+  it("13. Audit all 13 surfaces for exact visibility counting and collision-free boundaries", () => {
+    for (const s of SURFACES) {
+      const result = layoutEngine(SAMPLE_AD, s);
+      const visibleElements = result.elements.filter(
+        (p) => p.visible && p.content && p.width > 0 && p.height > 0
+      );
+      const total = SAMPLE_AD.length;
+      const count = visibleElements.length;
+      console.log(`[SURFACE AUDIT] ${s.name.padEnd(20)} (${s.width}x${s.height}): ${count}/${total} visible -> [${visibleElements.map(e => e.type).join(", ")}]`);
+
+      // Ensure hiddenCount accurately reflects dropped elements
+      expect(result.hiddenCount).toBe(total - count);
+
+      // Verify no visible element overflows the surface
+      for (const el of visibleElements) {
+        expect(el.x + el.width).toBeLessThanOrEqual(s.width + 1);
+        expect(el.y + el.height).toBeLessThanOrEqual(s.height + 1);
+      }
+
+      // If subtext is visible, ensure it ends before or at CTA's top position
+      const subtext = visibleElements.find((e) => e.type === "subtext");
+      const cta = visibleElements.find((e) => e.type === "cta");
+      if (subtext && cta && cta.y > subtext.y) {
+        expect(subtext.y + subtext.height).toBeLessThanOrEqual(cta.y + 1);
+      }
     }
   });
 });

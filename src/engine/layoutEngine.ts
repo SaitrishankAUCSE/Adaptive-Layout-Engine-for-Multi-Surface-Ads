@@ -87,7 +87,12 @@ export function layoutEngine(
     }
   }
 
-  const hiddenCount = allPositioned.filter((p) => !p.visible).length;
+  const activeInputElements = elements.filter((el) => el.content && el.content.trim() !== "");
+  const activeIds = new Set(activeInputElements.map((el) => el.id));
+  const trulyVisibleCount = allPositioned.filter(
+    (p) => activeIds.has(p.id) && p.visible && p.width > 0 && p.height > 0
+  ).length;
+  const hiddenCount = Math.max(0, activeInputElements.length - trulyVisibleCount);
   const decisions = [...pruningDecisions, ...result.decisions];
 
   return {

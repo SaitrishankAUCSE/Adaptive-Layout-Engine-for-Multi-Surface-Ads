@@ -8,20 +8,35 @@ const PAD = 8; // universal inner padding (px)
  */
 
 export function headlineFontSize(s: Surface): number {
-  // Clamp between 10px (tiny banner) and 80px (full-page story)
-  return clamp(s.height * 0.09, 10, 80);
+  const ar = s.width / s.height;
+  if (ar >= 2.2) {
+    // WIDE banner: height is the constraining dimension
+    return clamp(Math.round(s.height * 0.22), 11, 38);
+  }
+  if (ar <= 0.75) {
+    // TALL display/story: width is the typographic constraint
+    return clamp(Math.round(s.width * 0.085), 18, 64);
+  }
+  // SQUARE / Standard: balance both width and height
+  return clamp(Math.round(Math.min(s.width * 0.08, s.height * 0.10)), 15, 54);
 }
 
 export function subtextFontSize(s: Surface): number {
-  return clamp(headlineFontSize(s) * 0.58, 8, 48);
+  const base = headlineFontSize(s);
+  return clamp(Math.round(base * 0.54), 11, 28);
 }
 
 export function ctaFontSize(s: Surface): number {
-  return clamp(headlineFontSize(s) * 0.7, 8, 52);
+  const base = headlineFontSize(s);
+  return clamp(Math.round(base * 0.64), 11, 30);
 }
 
 export function logoFontSize(s: Surface): number {
-  return clamp(s.height * 0.06, 7, 36);
+  const ar = s.width / s.height;
+  if (ar >= 2.2) {
+    return clamp(Math.round(s.height * 0.32), 14, 42);
+  }
+  return clamp(Math.round(Math.min(s.width * 0.10, s.height * 0.06)), 16, 48);
 }
 
 /**

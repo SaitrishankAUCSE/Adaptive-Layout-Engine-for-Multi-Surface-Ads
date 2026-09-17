@@ -99,8 +99,19 @@ const App: React.FC = () => {
 
       {/* ── Ambient background gradient ──────────────────────────── */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(240,241,199,0.055),transparent_70%)]" />
-        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(240,241,199,0.08),transparent_70%)] animate-[ambient-pulse_8s_ease-in-out_infinite]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_42%,rgba(240,147,251,0.06),transparent_70%)] animate-[ambient-pulse_12s_ease-in-out_infinite_reverse]" />
+        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/40 to-transparent" />
+        {/* Film-grain noise */}
+        <div
+          className="absolute inset-0 opacity-[0.018]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            backgroundRepeat: "repeat",
+            backgroundSize: "128px 128px",
+          }}
+        />
       </div>
 
       {/* ══════════════════════════════════════════════════════════
@@ -141,7 +152,7 @@ const App: React.FC = () => {
 
         {/* Right: Active status count */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground font-mono bg-white/[0.03] border border-white/[0.06] px-2.5 py-1 rounded-full">
+          <span className="text-[11px] font-semibold tracking-wide text-[#c8dfd0] bg-white/[0.04] border border-white/[0.08] px-3 py-1.5 rounded-full shadow-sm">
             {filteredSurfaces.length} Formats Active
           </span>
         </div>
@@ -221,10 +232,10 @@ const App: React.FC = () => {
             {view === "editor" && (
               <motion.div
                 key="editor"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0, y: 15, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -15, scale: 0.99 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="pb-20"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
@@ -254,10 +265,10 @@ const App: React.FC = () => {
             {view === "surfaces" && (
               <motion.div
                 key="surfaces"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0, y: 15, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -15, scale: 0.99 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="pb-20"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
@@ -284,10 +295,10 @@ const App: React.FC = () => {
             {view === "demo" && (
               <motion.div
                 key="demo"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0, y: 15, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -15, scale: 0.99 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="space-y-10 pb-20"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

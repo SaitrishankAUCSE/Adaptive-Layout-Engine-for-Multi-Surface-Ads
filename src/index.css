@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 /* ── Global scrollbar hide & default 75% screen ratio ────────────────── */
 html {
   zoom: 0.75;
@@ -215,6 +217,7 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
 }
 

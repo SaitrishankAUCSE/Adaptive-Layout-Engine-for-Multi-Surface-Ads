@@ -14,6 +14,7 @@ import { AutoEnhanceBanner } from "./components/AutoEnhanceBanner";
 const EngineInspector = React.lazy(() => import("./components/EngineInspector").then(module => ({ default: module.EngineInspector })));
 import { LandingScreen } from "./components/LandingScreen";
 import { CustomSurface } from "./components/CustomSurface";
+import { DownloadModal } from "./components/DownloadModal";
 
 import {
   LayoutTemplate,
@@ -27,9 +28,9 @@ import { cn } from "./lib/utils";
 type View = "editor" | "surfaces" | "demo";
 
 const NAV_ITEMS: { id: View; label: string; icon: React.ReactNode }[] = [
-  { id: "editor", label: "Editor", icon: <Edit3 size={14} /> },
-  { id: "surfaces", label: "Surfaces", icon: <LayoutTemplate size={14} /> },
-  { id: "demo", label: "Demo", icon: <Play size={14} /> },
+  { id: "editor", label: "Creative Studio", icon: <Edit3 size={14} /> },
+  { id: "surfaces", label: "Placement Matrix", icon: <LayoutTemplate size={14} /> },
+  { id: "demo", label: "Comparison Lab", icon: <Play size={14} /> },
 ];
 
 const AnysizeLogo = ({ size = 14 }: { size?: number }) => (
@@ -151,11 +152,16 @@ const App: React.FC = () => {
           ))}
         </nav>
 
-        {/* Right: Active status count */}
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold tracking-wide text-[#c8dfd0] bg-white/[0.04] border border-white/[0.08] px-3 py-1.5 rounded-full shadow-sm">
+        {/* Right: Active status count & Download button */}
+        <div className="flex items-center gap-2.5">
+          <span className="hidden sm:inline-flex text-[11px] font-semibold tracking-wide text-[#c8dfd0] bg-white/[0.04] border border-white/[0.08] px-3 py-1.5 rounded-full shadow-sm">
             {filteredSurfaces.length} Formats Active
           </span>
+          <DownloadModal
+            elements={debouncedElements}
+            surfaces={surfacesList}
+            activeSurfaces={activeSurfaces}
+          />
         </div>
       </header>
 

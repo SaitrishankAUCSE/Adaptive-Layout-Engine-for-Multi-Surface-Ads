@@ -64,6 +64,8 @@ This is **not an image resizer or CSS media query hack**. The engine mathematica
 - Proportionate typographic font sizing.
 - Intelligent focal-point cropping and aspect-ratio preservation.
 - Deterministic hiding of lower-priority elements when surface area is constrained.
+- **Multi-Format Export Engine**: One-click download of all 13 layouts or customized selections as a unified ZIP archive containing 1:1 pixel PNGs, standalone IAB-compliant HTML5 banners, and the layout JSON manifest.
+- **Enterprise AdTech Workspace**: Professional views including **Creative Studio**, **Placement Matrix**, and **Comparison Lab**.
 
 ---
 

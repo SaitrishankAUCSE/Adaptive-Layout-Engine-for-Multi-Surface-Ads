@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { generateDeterministicMockElements } from '../src/engine/mockOptimizer.ts';
+import { generateDeterministicMockElements } from '../src/engine/mockOptimizer.js';
 
 declare const process: any;
 

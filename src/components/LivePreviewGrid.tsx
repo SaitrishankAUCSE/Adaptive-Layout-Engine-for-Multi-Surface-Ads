@@ -14,11 +14,13 @@ import {
   Maximize2,
   X,
   Cpu,
+  Trash2,
 } from "lucide-react";
 
 interface Props {
   elements: AdElementType[];
   surfaces: Surface[];
+  onRemoveCustomSurface?: (surfaceId: string) => void;
 }
 
 const SOCIAL_IDS = new Set([
@@ -31,7 +33,9 @@ const SOCIAL_IDS = new Set([
   "youtube-thumbnail",
 ]);
 
-const getCategoryLabel = (id: string): string => {
+const getCategoryLabel = (surface: Surface): string => {
+  if (surface.custom) return "Custom Synthesized Spec";
+  const id = surface.id;
   if (id === "banner") return "IAB Standard Display";
   if (id === "instagram-reel" || id === "story") return "Social Vertical (9:16)";
   if (id === "youtube-thumbnail") return "Video Stream (16:9)";
@@ -53,7 +57,7 @@ const getTemplateLabel = (templateName?: string): string => {
   }
 };
 
-export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
+export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces, onRemoveCustomSurface }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedDecisions, setExpandedDecisions] = useState<Record<string, boolean>>({});
   const [modalSurface, setModalSurface] = useState<Surface | null>(null);
@@ -90,7 +94,7 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
           const result: LayoutResult | undefined = results[surface.id];
           const isCopied = copiedId === surface.id;
           const isDecisionsOpen = !!expandedDecisions[surface.id];
-          const category = getCategoryLabel(surface.id);
+          const category = getCategoryLabel(surface);
           const templateLabel = getTemplateLabel(result?.template);
           
           const activeElements = elements.filter((el) => el.content && el.content.trim() !== "");
@@ -119,10 +123,15 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
               {/* Surface Header */}
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="font-semibold text-sm text-[#f2f0ea] tracking-tight truncate">
                       {surface.name}
                     </h3>
+                    {surface.custom && (
+                      <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border border-primary/30 bg-primary/10 text-primary font-bold">
+                        Custom
+                      </span>
+                    )}
                     <span
                       className={`text-[9.5px] font-mono uppercase px-2 py-0.5 rounded-full border shrink-0 ${
                         shape === "WIDE"
@@ -165,6 +174,19 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
                       <Copy size={12} />
                     )}
                   </button>
+
+                  {surface.custom && onRemoveCustomSurface && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveCustomSurface(surface.id);
+                      }}
+                      title="Remove custom surface"
+                      className="flex h-6 w-6 items-center justify-center rounded-md text-red-400/70 hover:text-red-300 hover:bg-red-500/15 transition-all cursor-pointer"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
                 </div>
               </div>
 

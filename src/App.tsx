@@ -87,6 +87,11 @@ const App: React.FC = () => {
     setActiveSurfaces((prev) => [newSurface.id, ...prev]);
   };
 
+  const handleRemoveCustomSurface = (surfaceId: string) => {
+    setSurfacesList((prev) => prev.filter((s) => s.id !== surfaceId));
+    setActiveSurfaces((prev) => prev.filter((id) => id !== surfaceId));
+  };
+
   const visibleSurfaces = surfacesList.filter((s) => activeSurfaces.includes(s.id));
   const filteredSurfaces =
     filter === "ALL"
@@ -339,7 +344,11 @@ const App: React.FC = () => {
                     <CustomSurface onAdd={handleAddCustomSurface} />
                   </div>
                 </div>
-                <LivePreviewGrid elements={debouncedElements} surfaces={filteredSurfaces} />
+                <LivePreviewGrid
+                  elements={debouncedElements}
+                  surfaces={filteredSurfaces}
+                  onRemoveCustomSurface={handleRemoveCustomSurface}
+                />
               </motion.div>
             )}
 

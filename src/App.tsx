@@ -10,6 +10,7 @@ import AdPreview from "./components/AdPreview";
 import { classifySurface } from "./engine/classify";
 import AdEditor from "./components/AdEditor";
 import { AutoEnhanceBanner } from "./components/AutoEnhanceBanner";
+import { ComparisonAIWordEnhancer } from "./components/ComparisonAIWordEnhancer";
 
 const EngineInspector = React.lazy(() => import("./components/EngineInspector").then(module => ({ default: module.EngineInspector })));
 import { LandingScreen } from "./components/LandingScreen";
@@ -265,7 +266,6 @@ const App: React.FC = () => {
                     <CustomSurface onAdd={handleAddCustomSurface} />
                   </div>
                 </div>
-                <AutoEnhanceBanner elements={debouncedElements} surfaces={filteredSurfaces} onChange={setElements} />
                 <LivePreviewGrid elements={debouncedElements} surfaces={filteredSurfaces} />
               </motion.div>
             )}
@@ -320,6 +320,8 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 
+                <ComparisonAIWordEnhancer elements={debouncedElements} onChange={setElements} />
+
                 <AutoEnhanceBanner elements={debouncedElements} surfaces={SURFACES} onChange={setElements} />
 
                 <div className="mb-12">

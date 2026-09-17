@@ -190,7 +190,7 @@ Instead of naive text truncation, Anysize features an **autonomous copy optimiza
 ### Key Architectural Guarantees:
 1. **Layout Engine is Source of Truth**: Success is measured exclusively by evaluating the candidate across all 13 surfaces using `evaluateAllSurfaces`. Character counts are never assumed to guarantee a fit.
 2. **Zero Regressions & Automatic Rollback**: If a candidate causes a previously fitting surface to fail or hides a Priority-1 element, the proposal is rejected immediately and the original copy is preserved.
-3. **On-Demand Field-Level AI Word Enhancers**: In addition to global layout optimization, each individual text component (**Headline / Title**, **Description / Banner Subtext**, and **Call to Action Button**) features a dedicated, always-present `✨ AI Shorten` button. Clicking it condenses long sentences into their shortest, punchiest form while strictly preserving the core brand meaning and intent. A top-level `Shorten All Copy` button is also provided for single-click batch condensation. Visual assets (Image and Logo) are kept untouched.
+3. **Comparison Lab AI Word Enhancer Tool**: Positioned as a dedicated extra tool inside the **Comparison Lab**, the AI Word Enhancer allows copywriters to compare and transform long sentences in **Title (Headline)**, **Banner (Description)**, and **Alert Button (CTA)** into their shortest, highest-impact advertising forms with live character-reduction metrics (`before → after` diffs) and one-click batch condensation, keeping the Creative Studio clean and focused.
 4. **Deterministic Mock Fallback**: In development or demo environments with no external API keys configured, a built-in deterministic optimizer (`src/engine/mockOptimizer.ts`) strips puffery, targets optimal character limits, and preserves CTA intent—passing through the exact same schema and layout validation pipeline.
 
 ---
@@ -200,10 +200,11 @@ Instead of naive text truncation, Anysize features an **autonomous copy optimiza
 ```
 src/
 ├── components/
-│   ├── AdEditor.tsx             # Left fixed editor (inputs, file upload, AI prompt, field AI shorteners)
-│   ├── AdPreview.tsx            # Pure canvas preview scaler
-│   ├── AdElement.tsx            # Pure element renderer
-│   ├── AutoEnhanceBanner.tsx    # AI "Enhance to Fit" notification banner
+│   ├── AdEditor.tsx                 # Left fixed studio editor (inputs, file upload, AI generation)
+│   ├── AdPreview.tsx                # Pure canvas preview scaler
+│   ├── AdElement.tsx                # Pure element renderer
+│   ├── AutoEnhanceBanner.tsx        # AI "Enhance to Fit" notification banner
+│   ├── ComparisonAIWordEnhancer.tsx # Comparison Lab sentence condenser tool (Title, Banner, CTA)
 │   ├── DownloadModal.tsx        # Multi-format ZIP export modal (HTML5, 1:1 PNG, JSON AST)
 │   ├── SurfacePreview.tsx       # Surface wrapper
 │   ├── CustomSurface.tsx        # Dynamic custom dimension popover (e.g. 500x150)

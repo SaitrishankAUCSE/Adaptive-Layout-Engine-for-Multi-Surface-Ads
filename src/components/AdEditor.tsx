@@ -11,11 +11,6 @@ import {
 import type { AdElement } from "../engine/types";
 import { CAMPAIGN_PRESETS } from "../data/presets";
 import { cn } from "../lib/utils";
-import {
-  shortenHeadline,
-  shortenDescription,
-  shortenCta,
-} from "../engine/mockOptimizer";
 
 interface Props {
   elements: AdElement[];
@@ -80,93 +75,6 @@ const AdEditor: React.FC<Props> = ({ elements, onChange }) => {
       setAiError("Unable to generate content. Please try again.");
     } finally {
       setAiLoading(false);
-    }
-  };
-
-  const [shorteningField, setShorteningField] = useState<string | null>(null);
-
-  const handleEnhanceField = async (fieldId: "headline" | "subtext" | "cta") => {
-    const current = byId(fieldId)?.content ?? "";
-    if (!current.trim()) return;
-
-    setShorteningField(fieldId);
-    try {
-      // 1. Try fast LLM serverless rewrite with 3.5s timeout
-      const headline = fieldId === "headline" ? current : byId("headline")?.content ?? "";
-      const subtext = fieldId === "subtext" ? current : byId("subtext")?.content ?? "";
-      const cta = fieldId === "cta" ? current : byId("cta")?.content ?? "";
-
-      const prompt = `Rewrite the following ad copy to be concise while strictly preserving original meaning and brand intent.
-Headline: "${headline}"
-Description: "${subtext}"
-CTA: "${cta}"`;
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-      const res = await fetch("/api/generate-ad", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-        signal: controller.signal,
-      }).catch(() => null);
-
-      clearTimeout(timeoutId);
-
-      if (res && res.ok) {
-        const data = await res.json().catch(() => null);
-        if (data?.elements && Array.isArray(data.elements)) {
-          const match = data.elements.find(
-            (e: any) => e.type === fieldId || e.id === fieldId
-          );
-          if (match?.content && typeof match.content === "string" && match.content.trim()) {
-            update(fieldId, match.content.trim());
-            return;
-          }
-        }
-      }
-
-      // 2. Instant deterministic semantic optimizer fallback
-      let shortened = current;
-      if (fieldId === "headline") {
-        shortened = shortenHeadline(current, 35);
-      } else if (fieldId === "subtext") {
-        shortened = shortenDescription(current, 60);
-      } else if (fieldId === "cta") {
-        shortened = shortenCta(current, 18);
-      }
-      update(fieldId, shortened);
-    } catch (err) {
-      console.error("AI Enhancer fallback invoked:", err);
-      if (fieldId === "headline") update(fieldId, shortenHeadline(current, 35));
-      if (fieldId === "subtext") update(fieldId, shortenDescription(current, 60));
-      if (fieldId === "cta") update(fieldId, shortenCta(current, 18));
-    } finally {
-      setShorteningField(null);
-    }
-  };
-
-  const handleEnhanceAll = () => {
-    setShorteningField("all");
-    try {
-      const hl = byId("headline")?.content ?? "";
-      const desc = byId("subtext")?.content ?? "";
-      const cta = byId("cta")?.content ?? "";
-
-      const newHl = hl.trim() ? shortenHeadline(hl, 35) : hl;
-      const newDesc = desc.trim() ? shortenDescription(desc, 60) : desc;
-      const newCta = cta.trim() ? shortenCta(cta, 18) : cta;
-
-      onChange(
-        elements.map((el) => {
-          if (el.id === "headline") return { ...el, content: newHl };
-          if (el.id === "subtext") return { ...el, content: newDesc };
-          if (el.id === "cta") return { ...el, content: newCta };
-          return el;
-        })
-      );
-    } finally {
-      setShorteningField(null);
     }
   };
 
@@ -274,48 +182,11 @@ CTA: "${cta}"`;
         )}
       </div>
 
-      {/* ── Copy Elements Section Header with Global Shortener ─── */}
-      <div className="flex items-center justify-between pt-1 border-t border-white/[0.06]">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Copy Content
-        </span>
-        <button
-          type="button"
-          onClick={handleEnhanceAll}
-          disabled={shorteningField === "all"}
-          title="Condense all 3 copy fields (Headline, Subtext, CTA) to their shortest form"
-          className="px-2 py-1 rounded text-[10px] font-medium text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
-        >
-          {shorteningField === "all" ? (
-            <span className="w-2.5 h-2.5 border border-amber-400 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Sparkles size={11} className="text-amber-400" />
-          )}
-          <span>Shorten All Copy</span>
-        </button>
-      </div>
-
-      {/* ── Primary Headline (Title) ─────────────────────────── */}
+      {/* ── Primary Headline ─────────────────────────────────── */}
       <FieldGroup
         icon={<Type size={13} />}
         label="Headline"
         priority={1}
-        action={
-          <button
-            type="button"
-            onClick={() => handleEnhanceField("headline")}
-            disabled={shorteningField === "headline" || !byId("headline")?.content.trim()}
-            title="Condense headline to shortest form while keeping brand meaning"
-            className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 hover:border-amber-500/40 transition-all flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {shorteningField === "headline" ? (
-              <span className="w-2.5 h-2.5 border border-amber-400 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Sparkles size={10} className="text-amber-400 shrink-0" />
-            )}
-            <span>AI Shorten</span>
-          </button>
-        }
       >
         <div className="textarea-wrap">
           <textarea
@@ -332,27 +203,11 @@ CTA: "${cta}"`;
         </div>
       </FieldGroup>
 
-      {/* ── Subtext Description (Banner) ─────────────────────── */}
+      {/* ── Subtext Description ──────────────────────────────── */}
       <FieldGroup
         icon={<AlignLeft size={13} />}
         label="Description / Subtext"
         priority={3}
-        action={
-          <button
-            type="button"
-            onClick={() => handleEnhanceField("subtext")}
-            disabled={shorteningField === "subtext" || !byId("subtext")?.content.trim()}
-            title="Condense description to shortest form while keeping key details"
-            className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 hover:border-amber-500/40 transition-all flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {shorteningField === "subtext" ? (
-              <span className="w-2.5 h-2.5 border border-amber-400 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Sparkles size={10} className="text-amber-400 shrink-0" />
-            )}
-            <span>AI Shorten</span>
-          </button>
-        }
       >
         <textarea
           className="field-input field-textarea text-xs"
@@ -363,27 +218,11 @@ CTA: "${cta}"`;
         />
       </FieldGroup>
 
-      {/* ── Call To Action (Alert / Action Button) ─────────────── */}
+      {/* ── Call To Action ───────────────────────────────────── */}
       <FieldGroup
         icon={<MousePointerClick size={13} />}
         label="Call to Action"
         priority={1}
-        action={
-          <button
-            type="button"
-            onClick={() => handleEnhanceField("cta")}
-            disabled={shorteningField === "cta" || !byId("cta")?.content.trim()}
-            title="Condense CTA to punchiest shortest action phrase"
-            className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 hover:border-amber-500/40 transition-all flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {shorteningField === "cta" ? (
-              <span className="w-2.5 h-2.5 border border-amber-400 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Sparkles size={10} className="text-amber-400 shrink-0" />
-            )}
-            <span>AI Shorten</span>
-          </button>
-        }
       >
         <input
           className="field-input text-xs"
@@ -395,7 +234,7 @@ CTA: "${cta}"`;
         />
       </FieldGroup>
 
-      {/* ── Visual Asset (Hero Image - Visual, not text) ──────── */}
+      {/* ── Visual Asset (Hero Image) ────────────────────────── */}
       <FieldGroup
         icon={<Image size={13} />}
         label="Hero / Product Image"
@@ -407,7 +246,7 @@ CTA: "${cta}"`;
         />
       </FieldGroup>
 
-      {/* ── Brand Logo (Visual, not text) ────────────────────── */}
+      {/* ── Brand Logo (Upload or URL) ───────────────────────── */}
       <FieldGroup
         icon={<Tag size={13} />}
         label="Brand Logo"
@@ -428,23 +267,19 @@ interface FieldGroupProps {
   icon: React.ReactNode;
   label: string;
   priority: 1 | 2 | 3;
-  action?: React.ReactNode;
   children: React.ReactNode;
 }
 
-const FieldGroup: React.FC<FieldGroupProps> = ({ icon, label, priority, action, children }) => (
+const FieldGroup: React.FC<FieldGroupProps> = ({ icon, label, priority, children }) => (
   <div className="space-y-1.5">
     <div className="flex items-center justify-between">
       <label className="flex items-center gap-1.5 text-xs font-medium text-white/90">
         <span className="text-muted-foreground">{icon}</span>
         {label}
       </label>
-      <div className="flex items-center gap-1.5">
-        {action}
-        <span className={`priority-badge ${PRIORITY_META[priority].color}`}>
-          {PRIORITY_META[priority].label}
-        </span>
-      </div>
+      <span className={`priority-badge ${PRIORITY_META[priority].color}`}>
+        {PRIORITY_META[priority].label}
+      </span>
     </div>
     {children}
   </div>

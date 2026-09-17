@@ -100,7 +100,7 @@ const App: React.FC = () => {
 
   return (
     <div
-      className="flex flex-col w-full h-[100dvh] overflow-hidden bg-background text-foreground selection:bg-primary/20"
+      className="app-shell-root flex flex-col overflow-hidden bg-background text-foreground selection:bg-primary/20"
     >
 
       {/* ── Landing splash screen — overlays everything until dismissed ── */}
@@ -313,7 +313,7 @@ const App: React.FC = () => {
         )}
 
         {/* ── MAIN CANVAS (ONLY THIS RIGHT SIDE SCROLLS) ─────────── */}
-        <main className="flex-1 h-full overflow-y-auto relative p-3 sm:p-5 md:p-8 pb-24 lg:pb-8">
+        <main className="flex-1 h-full overflow-y-auto relative p-4 lg:p-8 pb-24 lg:pb-8">
           <AnimatePresence mode="wait">
             {view === "editor" && (
               <motion.div
@@ -324,12 +324,12 @@ const App: React.FC = () => {
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="pb-20"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                   <div>
-                    <h1 className="text-lg sm:text-xl font-semibold tracking-[-0.04em] bg-gradient-to-r from-[#f0f1c7] via-[#d0e5d8] via-[46%] to-[#ffffff] bg-clip-text text-transparent">
+                    <h1 className="text-xl font-semibold tracking-[-0.04em] bg-gradient-to-r from-[#f0f1c7] via-[#d0e5d8] via-[46%] to-[#ffffff] bg-clip-text text-transparent">
                       Live Preview Canvas
                     </h1>
-                    <p className="text-muted-foreground text-[11px] sm:text-xs mt-0.5">
+                    <p className="text-muted-foreground text-xs mt-0.5">
                       Adapting to {filteredSurfaces.length} formats dynamically
                     </p>
                   </div>
@@ -361,12 +361,12 @@ const App: React.FC = () => {
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="pb-20"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                   <div>
-                    <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-[#f2f0ea]">
+                    <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
                       Surface Preview Validation
                     </h1>
-                    <p className="text-muted-foreground text-[11px] sm:text-xs mt-0.5">
+                    <p className="text-muted-foreground text-xs mt-0.5">
                       Evaluating {filteredSurfaces.length} of {visibleSurfaces.length} active formats
                     </p>
                   </div>

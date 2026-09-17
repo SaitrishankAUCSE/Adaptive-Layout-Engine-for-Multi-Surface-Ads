@@ -14,6 +14,7 @@ import {
   innerWidth,
   innerHeight,
 } from "./scale";
+import { calculateWrappedLines } from "./textUtils";
 
 /**
  * HORIZONTAL template — for WIDE surfaces (banners, billboards, linkedin banners).
@@ -82,8 +83,7 @@ export function horizontalTemplate(
   const hlFontSize = headlineFontSize(surface);
   const hlText = hlEl?.content ?? "";
   const isLongHeadline = hlText.length > 40;
-  const charsPerLine = Math.max(12, Math.floor(textW / (hlFontSize * 0.58)));
-  const hlLines = Math.min(2, Math.max(1, Math.ceil(hlText.length / charsPerLine)));
+  const hlLines = Math.min(2, Math.max(1, calculateWrappedLines(hlText, textW, hlFontSize)));
   const hlH = Math.round(hlFontSize * 1.2 * hlLines);
 
   if (hlEl) {
@@ -109,8 +109,7 @@ export function horizontalTemplate(
   const stEl = byType.get("subtext");
   const stFontSize = subtextFontSize(surface);
   const stText = stEl?.content ?? "";
-  const stCharsPerLine = Math.max(14, Math.floor(textW / (stFontSize * 0.52)));
-  const stLines = Math.min(2, Math.max(1, Math.ceil(stText.length / stCharsPerLine)));
+  const stLines = Math.min(2, Math.max(1, calculateWrappedLines(stText, textW, stFontSize, 400)));
   const stH = Math.round(stFontSize * 1.3 * stLines);
   const stY = PAD + logoH + (logoH > 0 ? 3 : 0) + hlH + 3;
 
@@ -190,15 +189,13 @@ export function centeredStackTemplate(
   const hlFontSize = headlineFontSize(surface);
 
   const hlText = hlEl?.content ?? "";
-  const charsPerLine = Math.max(10, Math.floor(iw / (hlFontSize * 0.58)));
-  const hlLines = Math.min(2, Math.max(1, Math.ceil(hlText.length / charsPerLine)));
+  const hlLines = Math.min(2, Math.max(1, calculateWrappedLines(hlText, iw, hlFontSize)));
   const hlH = Math.round(hlFontSize * 1.25 * hlLines);
 
   const stEl = byType.get("subtext");
   const stFontSize = subtextFontSize(surface);
   const stText = stEl?.content ?? "";
-  const stCharsPerLine = Math.max(12, Math.floor(iw / (stFontSize * 0.52)));
-  const stLines = Math.min(2, Math.max(1, Math.ceil(stText.length / stCharsPerLine)));
+  const stLines = Math.min(2, Math.max(1, calculateWrappedLines(stText, iw, stFontSize, 400)));
   const stH = Math.round(stFontSize * 1.35 * stLines);
 
   const gap = Math.max(3, Math.round(PAD * 0.5));
@@ -358,15 +355,13 @@ export function verticalStackTemplate(
 
   // Line wrapping calculation based on container inner width
   const hlText = hlEl?.content ?? "";
-  const charsPerLine = Math.max(10, Math.floor(iw / (hlFontSize * 0.58)));
-  const hlLines = Math.min(3, Math.max(1, Math.ceil(hlText.length / charsPerLine)));
+  const hlLines = Math.min(3, Math.max(1, calculateWrappedLines(hlText, iw, hlFontSize)));
   const hlH = Math.round(hlFontSize * 1.25 * hlLines);
 
   const stEl = byType.get("subtext");
   const stFontSize = subtextFontSize(surface);
   const stText = stEl?.content ?? "";
-  const stCharsPerLine = Math.max(12, Math.floor(iw / (stFontSize * 0.52)));
-  const stLines = Math.min(3, Math.max(1, Math.ceil(stText.length / stCharsPerLine)));
+  const stLines = Math.min(3, Math.max(1, calculateWrappedLines(stText, iw, stFontSize, 400)));
   const stH = Math.round(stFontSize * 1.35 * stLines);
 
   const gap = Math.max(4, Math.round(PAD * 0.6));

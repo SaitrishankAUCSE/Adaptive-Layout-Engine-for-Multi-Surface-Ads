@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { AdElement, Surface } from "./engine/types";
 import { SAMPLE_AD } from "./data/sampleAd";
@@ -7,9 +7,10 @@ import { LivePreviewGrid } from "./components/LivePreviewGrid";
 import { SurfaceTabs, type FilterShape } from "./components/SurfaceTabs";
 import { SurfaceTogglePanel } from "./components/SurfaceTogglePanel";
 import AdPreview from "./components/AdPreview";
-import { EngineInspector } from "./components/EngineInspector";
 import { classifySurface } from "./engine/classify";
 import AdEditor from "./components/AdEditor";
+
+const EngineInspector = React.lazy(() => import("./components/EngineInspector").then(module => ({ default: module.EngineInspector })));
 import { LandingScreen } from "./components/LandingScreen";
 import { CustomSurface } from "./components/CustomSurface";
 
@@ -340,7 +341,9 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <EngineInspector elements={debouncedElements} surface={SURFACES.find(s => s.id === demoSurfaceId) || SURFACES[0]} />
+                <Suspense fallback={<div className="h-40 w-full animate-pulse bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-muted-foreground text-xs">Loading Inspector Module...</div>}>
+                  <EngineInspector elements={debouncedElements} surface={SURFACES.find(s => s.id === demoSurfaceId) || SURFACES[0]} />
+                </Suspense>
               </motion.div>
             )}
           </AnimatePresence>

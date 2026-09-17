@@ -1,33 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- Rounded dark obsidian background -->
-  <rect width="64" height="64" rx="16" fill="#090a0f" />
-  <rect x="1" y="1" width="62" height="62" rx="15" stroke="url(#borderGlow)" stroke-width="1.5" stroke-opacity="0.6" />
-  
+  <!-- Rounded dark obsidian container matching site theme -->
+  <rect width="64" height="64" rx="16" fill="#08090c" />
+  <rect x="1" y="1" width="62" height="62" rx="15" stroke="url(#themeBorder)" stroke-width="1.5" />
+
   <defs>
-    <linearGradient id="neonGradient" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+    <!-- Multi-surface gradient: Emerald green (#10b981) to Champagne Cream (#f0f1c7) -->
+    <linearGradient id="themeGradient" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#10b981" />
-      <stop offset="50%" stop-color="#06b6d4" />
-      <stop offset="100%" stop-color="#3b82f6" />
+      <stop offset="45%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#f0f1c7" />
     </linearGradient>
-    <linearGradient id="borderGlow" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+
+    <!-- Squircle border glow -->
+    <linearGradient id="themeBorder" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#10b981" stop-opacity="0.8" />
-      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.2" />
+      <stop offset="50%" stop-color="#059669" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#f0f1c7" stop-opacity="0.7" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="1.2" result="blur" />
+
+    <!-- Neon Glow Filter -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
 
-  <!-- Group with glow filter representing adaptive multi-surfaces (Wide, Square, Tall) -->
-  <g filter="url(#glow)">
-    <!-- 1. Top Wide Banner: x=12, y=12, w=22, h=10 -->
-    <rect x="12" y="12" width="22" height="10" rx="2.5" stroke="url(#neonGradient)" stroke-width="2.5" fill="none" />
-    
-    <!-- 2. Bottom Square: x=12, y=26, w=22, h=26 -->
-    <rect x="12" y="26" width="22" height="26" rx="3.5" stroke="url(#neonGradient)" stroke-width="2.5" fill="none" />
-    
-    <!-- 3. Right Tall Story: x=38, y=12, w=14, h=40 -->
-    <rect x="38" y="12" width="14" height="40" rx="3" stroke="url(#neonGradient)" stroke-width="2.5" fill="none" />
+  <!-- 3 Adaptive Multi-Surface Frames (Wide, Square, Tall) -->
+  <g filter="url(#neonGlow)">
+    <!-- 1. Top Wide Banner: x=11, y=12, w=23, h=10 -->
+    <rect x="11" y="12" width="23" height="10" rx="2.5" stroke="url(#themeGradient)" stroke-width="2.6" fill="rgba(16, 185, 129, 0.08)" />
+
+    <!-- 2. Bottom Square: x=11, y=26, w=23, h=26 -->
+    <rect x="11" y="26" width="23" height="26" rx="3.5" stroke="url(#themeGradient)" stroke-width="2.6" fill="rgba(16, 185, 129, 0.08)" />
+
+    <!-- 3. Right Tall Story: x=38, y=12, w=15, h=40 -->
+    <rect x="38" y="12" width="15" height="40" rx="3" stroke="url(#themeGradient)" stroke-width="2.6" fill="rgba(240, 241, 199, 0.08)" />
   </g>
 </svg>

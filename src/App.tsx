@@ -42,14 +42,12 @@ const AnysizeLogo = ({ size = 14 }: { size?: number }) => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <path
-      d="M4 8V4H8M16 4H20V8M20 16V20H16M8 20H4V16"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" />
+    {/* 1. Top Wide Banner Surface */}
+    <rect x="3" y="3" width="9.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.8" />
+    {/* 2. Bottom Square Surface */}
+    <rect x="3" y="9.5" width="9.5" height="11.5" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+    {/* 3. Right Tall Story Surface */}
+    <rect x="14.5" y="3" width="6.5" height="18" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
   </svg>
 );
 

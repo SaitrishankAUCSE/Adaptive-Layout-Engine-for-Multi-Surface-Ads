@@ -36,7 +36,7 @@ export const SAMPLE_AD: AdElement[] = [
   {
     id: "headline",
     type: "headline",
-    content: "Premium Wireless Headphones",
+    content: "Next-Gen Wireless Headphones with Active Noise Cancellation",
     priority: 1,
     flexible: true,
   },

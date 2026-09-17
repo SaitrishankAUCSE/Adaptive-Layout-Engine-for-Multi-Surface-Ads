@@ -24,8 +24,10 @@ export const CustomSurface: React.FC<Props> = ({ onAdd }) => {
   const meta = SHAPE_META[shape];
   const ar = height > 0 ? (width / height).toFixed(2) : "0.00";
 
+  const isValid = width >= 50 && width <= 3000 && height >= 50 && height <= 3000;
+
   const handleAdd = () => {
-    if (width < 50 || height < 50) return;
+    if (!isValid) return;
     onAdd({
       id: `custom-${customIdCounter++}`,
       name: `Custom ${width}×${height}`,
@@ -137,9 +139,15 @@ export const CustomSurface: React.FC<Props> = ({ onAdd }) => {
           </div>
 
           {/* Add Button */}
+          {!isValid && (
+            <p className="text-[10px] text-red-400 mb-2">
+              Width and height must be between 50px and 3000px.
+            </p>
+          )}
           <button
             onClick={handleAdd}
-            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-black bg-white hover:bg-[#f2f0ea] active:scale-[0.98] transition-all cursor-pointer shadow-md"
+            disabled={!isValid}
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-black bg-white hover:bg-[#f2f0ea] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-md"
           >
             <Plus size={14} />
             <span>Add to Preview Grid</span>

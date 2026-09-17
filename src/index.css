@@ -1,8 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* ── Global scrollbar hide & default 75% screen ratio ────────────────── */
-html {
-  zoom: 0.75;
+/* ── Global scrollbar hide & desktop screen ratio ────────────────────── */
+@media (min-width: 1025px) {
+  html {
+    zoom: 0.75;
+  }
+}
+@media (max-width: 1024px) {
+  html {
+    zoom: 1;
+    -webkit-text-size-adjust: 100%;
+  }
 }
 * {
   scrollbar-width: none;   /* Firefox */
@@ -12,6 +20,9 @@ html {
 }
 body {
   -ms-overflow-style: none; /* IE and Edge */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
 }
 
 @import "tailwindcss";

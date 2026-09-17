@@ -13,11 +13,29 @@ export const CompareDemo: React.FC<Props> = ({ elements, surface }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false); // ref instead of state — no re-render on drag flag change
   const rafRef = useRef<number>(0);
+  const [containerWidth, setContainerWidth] = useState(720);
 
   const headline = elements.find((e) => e.id === "headline")?.content ?? "";
 
-  const maxDisplayWidth = 720;
-  const maxDisplayHeight = 400;
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.clientWidth);
+      }
+    };
+    updateWidth();
+    const observer = new ResizeObserver(() => updateWidth());
+    observer.observe(containerRef.current);
+    window.addEventListener("resize", updateWidth);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, []);
+
+  const maxDisplayHeight = 360;
+  const maxDisplayWidth = Math.min(720, Math.max(260, containerWidth - 32));
 
   const scaleX = maxDisplayWidth / surface.width;
   const scaleY = maxDisplayHeight / surface.height;
@@ -116,11 +134,11 @@ export const CompareDemo: React.FC<Props> = ({ elements, surface }) => {
 
         {/* Slider handle */}
         <div
-          className="absolute top-0 bottom-0 w-px bg-white/30 pointer-events-none"
+          className="absolute top-0 bottom-0 w-px bg-white/40 pointer-events-none"
           style={{ left: `${position}%`, transform: "translateX(-50%)" }}
         >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 bg-background border border-white/20 rounded-full flex items-center justify-center shadow-lg">
-            <MoveHorizontal size={13} className="text-muted-foreground" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 bg-[#0e0e12] border-2 border-primary/70 rounded-full flex items-center justify-center shadow-[0_0_16px_rgba(240,241,199,0.3)]">
+            <MoveHorizontal size={15} className="text-primary" />
           </div>
         </div>
       </div>

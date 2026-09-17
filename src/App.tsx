@@ -54,6 +54,7 @@ const AnysizeLogo = ({ size = 14 }: { size?: number }) => (
 const App: React.FC = () => {
   const [view, setView] = useState<View>("editor");
   const [panelOpen, setPanelOpen] = useState(true);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [filter, setFilter] = useState<FilterShape>("ALL");
   const [elements, setElements] = useState<AdElement[]>(SAMPLE_AD);
   const [debouncedElements, setDebouncedElements] = useState<AdElement[]>(SAMPLE_AD);
@@ -76,6 +77,11 @@ const App: React.FC = () => {
     setShowLanding(false);
   };
 
+  const handleViewChange = (newView: View) => {
+    setView(newView);
+    setMobileDrawerOpen(false);
+  };
+
   const handleAddCustomSurface = (newSurface: Surface) => {
     setSurfacesList((prev) => [newSurface, ...prev]);
     setActiveSurfaces((prev) => [newSurface.id, ...prev]);
@@ -89,8 +95,7 @@ const App: React.FC = () => {
 
   return (
     <div
-      style={{ width: "calc(100vw / 0.75)", height: "calc(100vh / 0.75)" }}
-      className="flex flex-col overflow-hidden bg-background text-foreground selection:bg-primary/20"
+      className="flex flex-col w-full h-[100dvh] overflow-hidden bg-background text-foreground selection:bg-primary/20"
     >
 
       {/* ── Landing splash screen — overlays everything until dismissed ── */}
@@ -118,42 +123,43 @@ const App: React.FC = () => {
       {/* ══════════════════════════════════════════════════════════
           TOP NAVIGATION HEADER (STRICTLY FIXED)
       ══════════════════════════════════════════════════════════ */}
-      <header className="flex h-14 w-full items-center justify-between border-b border-white/[0.08] bg-black/60 backdrop-blur-2xl px-5 shrink-0 z-30">
+      <header className="flex h-14 w-full items-center justify-between border-b border-white/[0.08] bg-black/60 backdrop-blur-2xl px-3 sm:px-5 shrink-0 z-30">
         {/* Left: Brand */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-sm shrink-0">
             <AnysizeLogo size={14} />
           </div>
           <span className="text-[14px] font-semibold text-[#f2f0ea] tracking-tight">
             Anysize
           </span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground ml-1">
+          <span className="hidden md:inline-flex text-[10px] font-mono px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground ml-1">
             Multi-Surface Engine
           </span>
         </div>
 
         {/* Center: View Switcher */}
-        <nav className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-full border border-white/[0.06]">
+        <nav className="flex items-center gap-0.5 sm:gap-1 bg-white/[0.03] p-0.5 sm:p-1 rounded-full border border-white/[0.06]">
           {NAV_ITEMS.map(({ id, label, icon }) => (
             <button
               key={id}
-              onClick={() => setView(id)}
+              onClick={() => handleViewChange(id)}
+              title={label}
               className={cn(
-                "flex items-center gap-1.5 px-4 h-7 rounded-full text-xs font-medium transition-all cursor-pointer active:scale-[0.97]",
+                "flex items-center gap-1.5 px-2.5 sm:px-4 h-7 rounded-full text-xs font-medium transition-all cursor-pointer active:scale-[0.97]",
                 view === id
                   ? "bg-white/10 text-white shadow-sm"
                   : "text-muted-foreground hover:text-white hover:bg-white/5"
               )}
             >
               {icon}
-              <span>{label}</span>
+              <span className="hidden sm:inline">{label}</span>
             </button>
           ))}
         </nav>
 
         {/* Right: Active status count & Download button */}
-        <div className="flex items-center gap-2.5">
-          <span className="hidden sm:inline-flex text-[11px] font-semibold tracking-wide text-[#c8dfd0] bg-white/[0.04] border border-white/[0.08] px-3 py-1.5 rounded-full shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          <span className="hidden lg:inline-flex text-[11px] font-semibold tracking-wide text-[#c8dfd0] bg-white/[0.04] border border-white/[0.08] px-3 py-1.5 rounded-full shadow-sm">
             {filteredSurfaces.length} Formats Active
           </span>
           <DownloadModal
@@ -168,11 +174,11 @@ const App: React.FC = () => {
           MAIN WORKSPACE BODY (LEFT FIXED, RIGHT SCROLLABLE)
       ══════════════════════════════════════════════════════════ */}
       <div className="flex flex-1 w-full min-h-0 overflow-hidden relative z-10">
-        {/* ── LEFT EDITOR PANEL (STRICTLY FIXED, NEVER MOVES) ───── */}
+        {/* ── DESKTOP LEFT EDITOR PANEL (>= 1024px, STRICTLY FIXED) ───── */}
         {view === "editor" && (
           <aside
             className={cn(
-              "h-full shrink-0 border-r border-white/[0.08] bg-black/40 backdrop-blur-2xl overflow-hidden relative z-20 transition-[width] duration-300 ease-in-out flex flex-col"
+              "hidden lg:flex h-full shrink-0 border-r border-white/[0.08] bg-black/40 backdrop-blur-2xl overflow-hidden relative z-20 transition-[width] duration-300 ease-in-out flex-col"
             )}
             style={{ width: panelOpen ? 340 : 48 }}
           >
@@ -213,9 +219,9 @@ const App: React.FC = () => {
           </aside>
         )}
 
-        {/* ── SURFACES CONFIG PANEL (STRICTLY FIXED) ─────────────── */}
+        {/* ── DESKTOP SURFACES CONFIG PANEL (>= 1024px) ─────────────── */}
         {view === "surfaces" && (
-          <aside className="h-full w-72 shrink-0 border-r border-white/[0.08] bg-black/40 backdrop-blur-2xl overflow-y-auto p-4 gap-4 flex flex-col z-20">
+          <aside className="hidden lg:flex h-full w-72 shrink-0 border-r border-white/[0.08] bg-black/40 backdrop-blur-2xl overflow-y-auto p-4 gap-4 flex-col z-20">
             <div>
               <h2 className="text-sm font-semibold text-[#f2f0ea] tracking-tight mb-0.5">
                 Surface Configuration
@@ -232,8 +238,77 @@ const App: React.FC = () => {
           </aside>
         )}
 
+        {/* ── MOBILE / TABLET SLIDE-OVER DRAWER (< 1024px) ──────── */}
+        {mobileDrawerOpen && (
+          <div
+            className="lg:hidden fixed inset-0 top-14 bg-black/75 backdrop-blur-sm z-40 animate-in fade-in duration-200"
+            onClick={() => setMobileDrawerOpen(false)}
+          />
+        )}
+        <div
+          className={cn(
+            "lg:hidden fixed inset-y-14 left-0 w-[340px] max-w-[88vw] z-50 bg-[#0a0a0f] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
+            mobileDrawerOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
+          )}
+        >
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.02] shrink-0">
+            <div className="flex items-center gap-2">
+              {view === "editor" ? (
+                <Edit3 size={14} className="text-primary" />
+              ) : (
+                <LayoutTemplate size={14} className="text-primary" />
+              )}
+              <span className="text-xs font-semibold text-[#f2f0ea]">
+                {view === "editor" ? "Ad Creative Editor" : "Surface Configuration"}
+              </span>
+            </div>
+            <button
+              onClick={() => setMobileDrawerOpen(false)}
+              className="px-2.5 py-1 text-xs font-medium rounded-md bg-white/10 text-white hover:bg-white/15 cursor-pointer"
+            >
+              Done
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {view === "editor" && <AdEditor elements={elements} onChange={setElements} />}
+            {view === "surfaces" && (
+              <div className="p-4">
+                <SurfaceTogglePanel
+                  surfaces={surfacesList}
+                  activeIds={activeSurfaces}
+                  onChange={setActiveSurfaces}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── MOBILE FLOATING ACTION TOGGLE PILL ───────────────── */}
+        {view === "editor" && (
+          <div className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-30">
+            <button
+              onClick={() => setMobileDrawerOpen((prev) => !prev)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-xs shadow-2xl hover:opacity-95 active:scale-95 transition-all cursor-pointer border border-white/20 backdrop-blur-md whitespace-nowrap"
+            >
+              <Edit3 size={14} />
+              <span>{mobileDrawerOpen ? "View Live Canvas" : "Edit Ad Assets"}</span>
+            </button>
+          </div>
+        )}
+        {view === "surfaces" && (
+          <div className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-30">
+            <button
+              onClick={() => setMobileDrawerOpen((prev) => !prev)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-xs shadow-2xl hover:opacity-95 active:scale-95 transition-all cursor-pointer border border-white/20 backdrop-blur-md whitespace-nowrap"
+            >
+              <LayoutTemplate size={14} />
+              <span>{mobileDrawerOpen ? "View Matrix Canvas" : "Configure Surfaces"}</span>
+            </button>
+          </div>
+        )}
+
         {/* ── MAIN CANVAS (ONLY THIS RIGHT SIDE SCROLLS) ─────────── */}
-        <main className="flex-1 h-full overflow-y-auto relative p-6 md:p-8">
+        <main className="flex-1 h-full overflow-y-auto relative p-3 sm:p-5 md:p-8 pb-24 lg:pb-8">
           <AnimatePresence mode="wait">
             {view === "editor" && (
               <motion.div
@@ -244,17 +319,17 @@ const App: React.FC = () => {
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="pb-20"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
                   <div>
-                    <h1 className="text-xl font-semibold tracking-[-0.04em] bg-gradient-to-r from-[#f0f1c7] via-[#d0e5d8] via-[46%] to-[#ffffff] bg-clip-text text-transparent">
+                    <h1 className="text-lg sm:text-xl font-semibold tracking-[-0.04em] bg-gradient-to-r from-[#f0f1c7] via-[#d0e5d8] via-[46%] to-[#ffffff] bg-clip-text text-transparent">
                       Live Preview Canvas
                     </h1>
-                    <p className="text-muted-foreground text-xs mt-0.5">
+                    <p className="text-muted-foreground text-[11px] sm:text-xs mt-0.5">
                       Adapting to {filteredSurfaces.length} formats dynamically
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex items-center p-1 rounded-full bg-black/50 border border-white/10 backdrop-blur-xl">
+                  <div className="flex items-center gap-2 flex-wrap max-w-full">
+                    <div className="flex items-center p-1 rounded-full bg-black/50 border border-white/10 backdrop-blur-xl max-w-full overflow-x-auto no-scrollbar">
                       <SurfaceTabs
                         filter={filter}
                         onChange={setFilter}
@@ -277,16 +352,16 @@ const App: React.FC = () => {
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="pb-20"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
                   <div>
-                    <h1 className="text-xl font-semibold tracking-tight text-[#f2f0ea]">
+                    <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-[#f2f0ea]">
                       Surface Preview Validation
                     </h1>
-                    <p className="text-muted-foreground text-xs mt-0.5">
+                    <p className="text-muted-foreground text-[11px] sm:text-xs mt-0.5">
                       Evaluating {filteredSurfaces.length} of {visibleSurfaces.length} active formats
                     </p>
                   </div>
-                  <div className="flex items-center p-1 rounded-full bg-black/50 border border-white/10 backdrop-blur-xl">
+                  <div className="flex items-center p-1 rounded-full bg-black/50 border border-white/10 backdrop-blur-xl max-w-full overflow-x-auto no-scrollbar">
                     <SurfaceTabs
                       filter={filter}
                       onChange={setFilter}

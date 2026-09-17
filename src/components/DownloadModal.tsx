@@ -89,8 +89,9 @@ export const DownloadModal: React.FC<Props> = ({
         "
         title="Download layouts package"
       >
-        <Download size={13} className="text-primary animate-pulse" />
-        <span>Download Layouts</span>
+        <Download size={13} className="text-primary animate-pulse shrink-0" />
+        <span className="hidden sm:inline">Download Layouts</span>
+        <span className="sm:hidden text-xs">Export</span>
       </button>
 
       {/* ── Export Modal Dialog ── */}
@@ -104,12 +105,12 @@ export const DownloadModal: React.FC<Props> = ({
             height: "100vh",
             zIndex: 9999,
           }}
-          className="flex items-center justify-center p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-150"
+          className="flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-150"
           onClick={() => !isExporting && setIsOpen(false)}
         >
           <div
             style={{
-              maxHeight: "85vh",
+              maxHeight: "90vh",
             }}
             className="
               relative w-full max-w-xl rounded-2xl border border-white/15
@@ -143,15 +144,15 @@ export const DownloadModal: React.FC<Props> = ({
             </div>
 
             {/* Modal Body */}
-            <div className="p-5 space-y-5 overflow-y-auto">
+            <div className="p-4 sm:p-5 space-y-4 sm:space-y-5 overflow-y-auto">
               {/* Quick Actions Bar */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                 {/* Option 1: Download All 13 */}
                 <button
                   onClick={() => handleExport(surfaces)}
                   disabled={isExporting}
                   className="
-                    group flex flex-col items-start p-3.5 rounded-xl border border-primary/30
+                    group flex flex-col items-start p-3 sm:p-3.5 rounded-xl border border-primary/30
                     bg-primary/[0.06] hover:bg-primary/[0.12] hover:border-primary/60
                     transition-all text-left cursor-pointer disabled:opacity-40
                   "
@@ -179,7 +180,7 @@ export const DownloadModal: React.FC<Props> = ({
                   }
                   disabled={isExporting || selectedSurfaceIds.length === 0}
                   className="
-                    group flex flex-col items-start p-3.5 rounded-xl border border-white/10
+                    group flex flex-col items-start p-3 sm:p-3.5 rounded-xl border border-white/10
                     bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/20
                     transition-all text-left cursor-pointer disabled:opacity-40
                   "
@@ -204,7 +205,7 @@ export const DownloadModal: React.FC<Props> = ({
                 <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
                   Package Format
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
                     { id: "bundle", label: "Full Bundle", desc: "PNG + HTML + JSON", icon: Package },
                     { id: "png", label: "Images (PNG)", desc: "1:1 pixel renders", icon: FileImage },

@@ -21,11 +21,11 @@ export const SurfaceTabs: React.FC<Props> = ({ filter, onChange, surfaces }) => 
   };
 
   return (
-    <Tabs value={filter} onValueChange={(v) => onChange(v as FilterShape)} className="w-auto">
-      <TabsList className="bg-transparent border-none p-0 h-auto flex flex-wrap justify-start rounded-none gap-0.5 shadow-none">
+    <Tabs value={filter} onValueChange={(v) => onChange(v as FilterShape)} className="w-auto max-w-full">
+      <TabsList className="bg-transparent border-none p-0 h-auto flex flex-nowrap items-center justify-start rounded-none gap-0.5 shadow-none whitespace-nowrap overflow-x-auto no-scrollbar">
         <TabsTrigger 
           value="ALL" 
-          className="gap-1.5 px-3 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-white transition-all data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-sm"
+          className="gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-white transition-all data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-sm cursor-pointer"
         >
           <LayoutTemplate size={13} />
           <span>All</span>

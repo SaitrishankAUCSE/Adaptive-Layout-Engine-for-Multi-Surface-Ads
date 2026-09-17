@@ -84,7 +84,7 @@ export const LivePreviewGrid: React.FC<Props> = ({ elements, surfaces }) => {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 items-start">
         {surfaces.map((surface) => {
           const shape = classifySurface(surface);
           const result: LayoutResult | undefined = results[surface.id];

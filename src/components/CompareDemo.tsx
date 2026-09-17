@@ -16,6 +16,16 @@ export const CompareDemo: React.FC<Props> = ({ elements, surface }) => {
 
   const headline = elements.find((e) => e.id === "headline")?.content ?? "";
 
+  const maxDisplayWidth = 720;
+  const maxDisplayHeight = 400;
+
+  const scaleX = maxDisplayWidth / surface.width;
+  const scaleY = maxDisplayHeight / surface.height;
+  const scale = Math.min(scaleX, scaleY, 1);
+
+  const displayW = Math.round(surface.width * scale);
+  const displayH = Math.round(surface.height * scale);
+
   // Throttle via requestAnimationFrame to avoid 60 setState calls per second
   const handlePointerMove = useCallback((e: PointerEvent) => {
     if (!isDraggingRef.current || !containerRef.current) return;
@@ -56,23 +66,35 @@ export const CompareDemo: React.FC<Props> = ({ elements, surface }) => {
 
       <div
         ref={containerRef}
-        className="relative w-full h-[160px] rounded-xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-xl select-none touch-none flex items-center justify-center p-6 shadow-2xl cursor-ew-resize"
+        className="relative w-full rounded-xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-xl select-none touch-none flex items-center justify-center shadow-2xl cursor-ew-resize transition-[height] duration-300 ease-out"
+        style={{ height: Math.max(240, displayH + 80) }}
         onPointerDown={() => { isDraggingRef.current = true; }}
       >
         {/* Left: Raw — no engine */}
         <div
-          className="absolute inset-0 bg-background flex flex-col justify-center overflow-hidden"
+          className="absolute inset-0 bg-background flex flex-col items-center justify-center overflow-hidden"
           style={{ clipPath: `polygon(0 0, ${position}% 0, ${position}% 100%, 0 100%)` }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(239,68,68,0.06)_1px,transparent_0)] [background-size:16px_16px] pointer-events-none" />
+          
           <div 
-            className="relative z-10 bg-black/80 border border-destructive/40 mx-auto overflow-visible flex items-center px-4 shrink-0 rounded-lg"
-            style={{ width: surface.width, height: surface.height }}
+            className="relative overflow-visible shrink-0 bg-black/80 border border-destructive/40 rounded-lg shadow-2xl"
+            style={{ width: displayW, height: displayH }}
           >
-            <span className="text-4xl font-bold whitespace-nowrap text-foreground">
-              {headline || "Your headline here"}
-            </span>
-            <div className="absolute top-2 right-2 px-2 py-0.5 bg-destructive/80 text-destructive-foreground text-[9px] font-bold rounded-sm uppercase tracking-wider">
+            <div 
+              style={{
+                width: surface.width, 
+                height: surface.height,
+                transform: `scale(${scale})`,
+                transformOrigin: "top left"
+              }}
+              className="absolute top-0 left-0 flex items-center px-4"
+            >
+              <span className="text-4xl font-bold whitespace-nowrap text-foreground">
+                {headline || "Your headline here"}
+              </span>
+            </div>
+            <div className="absolute top-2 right-2 px-2 py-0.5 bg-destructive/80 text-destructive-foreground text-[9px] font-bold rounded-sm uppercase tracking-wider z-50">
               No Engine
             </div>
           </div>
@@ -85,7 +107,7 @@ export const CompareDemo: React.FC<Props> = ({ elements, surface }) => {
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(240,241,199,0.05)_1px,transparent_0)] [background-size:16px_16px] pointer-events-none" />
           <div className="relative z-10 shrink-0 shadow-2xl border border-primary/30 rounded-lg overflow-hidden bg-black/80">
-            <AdPreview elements={elements} surface={surface} maxDisplayWidth={800} />
+            <AdPreview elements={elements} surface={surface} maxDisplayWidth={maxDisplayWidth} maxDisplayHeight={maxDisplayHeight} />
             <div className="absolute top-2 right-2 px-2 py-0.5 bg-primary/90 text-primary-foreground text-[9px] font-bold rounded-sm uppercase tracking-wider shadow-sm z-50">
               Engine
             </div>

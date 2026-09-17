@@ -10,10 +10,9 @@ interface Props {
   precomputedResult?: LayoutResult;
   /** Max width of the rendered thumbnail in the grid (px). Default 320. */
   maxDisplayWidth?: number;
+  /** Max height of the rendered thumbnail in the grid (px). Default 280. */
+  maxDisplayHeight?: number;
 }
-
-/** Maximum display height (px) for any preview thumbnail */
-const MAX_DISPLAY_HEIGHT = 280;
 
 /**
  * Renders the full ad layout for one surface at a scaled-down thumbnail size.
@@ -30,6 +29,7 @@ const AdPreview: React.FC<Props> = ({
   surface,
   precomputedResult,
   maxDisplayWidth = 320,
+  maxDisplayHeight = 280,
 }) => {
   const computed = useMemo(
     () => precomputedResult ?? layoutEngine(elements, surface),
@@ -38,9 +38,9 @@ const AdPreview: React.FC<Props> = ({
     [precomputedResult, elements, surface]
   );
 
-  // Compute the scale factor so the preview fits within maxDisplayWidth × MAX_DISPLAY_HEIGHT
+  // Compute the scale factor so the preview fits within maxDisplayWidth × maxDisplayHeight
   const scaleX = maxDisplayWidth / surface.width;
-  const scaleY = MAX_DISPLAY_HEIGHT / surface.height;
+  const scaleY = maxDisplayHeight / surface.height;
   const scale = Math.min(scaleX, scaleY, 1); // never upscale
 
   const displayW = Math.round(surface.width * scale);
